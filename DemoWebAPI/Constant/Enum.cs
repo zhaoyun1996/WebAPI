@@ -58,5 +58,29 @@
             Delete = 3,
             Duplicate = 4
         }
+
+        public enum DBDataType : int
+        {
+            none = 0,
+            uuid = 1,
+            numeric = 2,
+            boolean = 3,
+            timestamp = 4,
+            timestamp_with_time_zone = 5,
+            integer = 6,
+            bigint = 7,
+            date = 8,
+            text = 9,
+            uuid_arr = 10,
+            numeric_arr = 11,
+            boolean_arr = 12,
+            timestamp_arr = 13,
+            integer_arr = 14,
+            bigint_arr = 15,
+            date_arr = 16,
+            text_arr = 17,
+            smallint = 18,
+            smallint_arr = 19
+        }
     }
 }

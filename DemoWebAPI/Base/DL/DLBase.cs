@@ -20,7 +20,7 @@ namespace DemoWebAPI.Base.DL
         /// <param name="commandType"></param>
         /// <param name="commandTimeout"></param>
         /// <returns></returns>
-        public List<T> ExecuteData<T>(string sql, List<DatabaseParamOld> param = null, CommandType commandType = CommandType.Text, int commandTimeout = 30)
+        public List<T> ExecuteData<T>(string sql, List<DatabaseParamOld> param, CommandType commandType = CommandType.Text, int commandTimeout = 30)
         {
             List<T> result = Activator.CreateInstance<List<T>>()   
 
@@ -119,16 +119,63 @@ namespace DemoWebAPI.Base.DL
                         {
                             IDbTransaction tran = transaction;
 
+                            try
+                            {
+                                if(page == 0)
+                                {
+                                    DoSaveData(cnn, tran, pagingData, modelState, schema, tableName, primaryKey, commandTimeOut);
+                                }
+                            }
+                            catch (Exception)
+                            {
 
+                                throw;
+                            }
+                            finally
+                            {
+                                if (tran != null && transaction == null)
+                                {
+                                    tran.Dispose();
+                                    tran = null;
+                                }
+                            }
                         }
+
+                        page += 1;
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-
                 throw;
             }
+
+            return exceptionData;
+        }
+
+        private void DoSaveData<T>(IDbConnection cnn, IDbTransaction tran, List<T> lstModel, ModelState modelState, string schema, string tableName, string primaryKey, int commandTimeOut)
+        {
+            switch (modelState)
+            {
+                case ModelState.None:
+                    //DoSaveDataNoneState<T>(cnn, tran, lstModel, modelState, schema, tableName, primaryKey, commandTimeOut);
+                    break;
+                default:
+                    if(modelState == ModelState.Update)
+                    {
+                        
+                    }
+                    else
+                    {
+                        DoSaveDataByState(cnn, tran, lstModel, modelState, schema, tableName, primaryKey, commandTimeOut);
+                    }
+                    break;
+            }
+        }
+
+        private void DoSaveDataByState(IDbConnection cnn, IDbTransaction tran, List<T> lstModel, ModelState modelState, string schema, string tableName, string primaryKey, int commandTimeOut)
+        {
+
         }
 
         /// <summary>
@@ -254,11 +301,11 @@ namespace DemoWebAPI.Base.DL
                 .Build();
 
             // Access values using the configuration
-            string host = configuration["ConnectionString:Host"];
-            string port = configuration["ConnectionString:Port"];
-            string username = configuration["ConnectionString:Username"];
-            string password = configuration["ConnectionString:Password"];
-            string database = configuration["ConnectionString:Database"];
+            string host = configuration["ConnectionString:Host"] + "";
+            string port = configuration["ConnectionString:Port"] + "";
+            string username = configuration["ConnectionString:Username"] + "";
+            string password = configuration["ConnectionString:Password"] + "";
+            string database = configuration["ConnectionString:Database"] + "";
 
             return $"Host={host};Port={port};Username={username};Password={password};Database={database}";
         }
