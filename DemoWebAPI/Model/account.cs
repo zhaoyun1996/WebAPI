@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DemoWebAPI.Model
 {
+    [Table("account", Schema = "public")]
     public class account
     {
         [Key]

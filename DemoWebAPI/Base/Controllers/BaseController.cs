@@ -1,6 +1,5 @@
 ﻿using DemoWebAPI.Base.BL;
 using DemoWebAPI.Base.Model;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DemoWebAPI.Base.Controllers
@@ -10,8 +9,8 @@ namespace DemoWebAPI.Base.Controllers
         [HttpPost]
         public virtual async Task<ServiceRespone> Insert(TModel model)
         {
-            BLBase bLBase = new BLBase(model);
-            return bLBase.Insert(model); 
+            BLBase<TModel> bLBase = new BLBase<TModel>();
+            return await bLBase.Insert(model); 
         }
     }
 }

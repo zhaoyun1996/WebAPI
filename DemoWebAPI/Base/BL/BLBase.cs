@@ -5,7 +5,7 @@ using static DemoWebAPI.Constant.Enum;
 
 namespace DemoWebAPI.Base.BL
 {
-    public abstract class BLBase<TModel>
+    public partial class BLBase<TModel>
     {
         protected DLBase _dLBase = new DLBase();
 
@@ -28,7 +28,7 @@ namespace DemoWebAPI.Base.BL
                 this._dLBase.OpenConnection(cnn);
 
                 transaction = cnn.BeginTransaction(IsolationLevel.ReadUncommitted);
-                bool isSuccess = this._dLBase.InserData(cnn, transaction, model);
+                Dictionary<object, Exception> result = this._dLBase.DoSaveBatchData(cnn, transaction, new List<TModel> { model }, ModelState.Insert);
                 transaction.Commit();
             }
             catch (Exception)
@@ -36,6 +36,8 @@ namespace DemoWebAPI.Base.BL
 
                 throw;
             }
+
+            return res;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace DemoWebAPI.Model
+﻿namespace DemoWebAPI.Base.Model
 {
     public class DatabaseParamOld
     {

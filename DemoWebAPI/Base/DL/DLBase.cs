@@ -1,19 +1,17 @@
 ﻿using DemoWebAPI.Base.Interface;
 using DemoWebAPI.Base.Model;
-using DemoWebAPI.Model;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Newtonsoft.Json.Serialization;
 using Npgsql;
 using System.Data;
-using System.Net;
-using System.Net.Sockets;
+using System.Collections;
 using System.Reflection;
 using static DemoWebAPI.Constant.Enum;
 
 namespace DemoWebAPI.Base.DL
 {
-    public class DLBase
+    public partial class DLBase
     {
+        protected PostgreSQLProvider _PostgreSQLProvider = new PostgreSQLProvider();
+
         /// <summary>
         /// Thực thi lệnh tương tác với database, trả về kết quả 1 bảng
         /// </summary>
@@ -260,7 +258,7 @@ namespace DemoWebAPI.Base.DL
                 }
                 else
                 {
-                    result = _PostgreSQLProvider.Execute(cnn, sql, param, transaction, GetcommandTimeout(commandTimeout), commandType);
+                    result = _PostgreSQLProvider.Execute(cnn, sql, param, transaction, GetCommandTimeout(commandTimeout), commandType);
                 }
             }
             return result;
@@ -289,12 +287,78 @@ namespace DemoWebAPI.Base.DL
                 {
                     tsql.Append(ScriptHelper.GenerateScript(updateData, ModelState.Update, schema, tableName, primaryKey, null, sufixParamName: "1"));
                 }
-                if(insertData != null && insertData.Count > 0)
+                if (insertData != null && insertData.Count > 0)
                 {
                     tsql.Append(ScriptHelper.GenerateScript(updateData, ModelState.Insert, schema, tableName, primaryKey, null, sufixParamName: "2"));
                 }
                 tsql.Append(scriptCustomAfter);
                 ExecuteNonQuery(CommandType.Text, cnn, transaction, tsql.Script, tsql.Param, commandTimeout);
+            }
+        }
+
+        public void CloseConnection(IDbConnection cnn)
+        {
+            if (cnn != null)
+            {
+                cnn.Close();
+            }
+            cnn.Dispose();
+        }
+
+        public List<T> Query<T>(CommandType commandType, IDbConnection cnn, IDbTransaction transaction, ScriptHelperOutputBase param, int commandTimeout = DBConstant.CommonTimeoutNon)
+        {
+            List<T> result = new List<T>();
+            if (param != null && !string.IsNullOrEmpty(param.Script))
+            {
+                result = Query<T>(commandType, cnn, transaction, param.Script, param.GetParam(), commandTimeout);
+            }
+            return result;
+        }
+
+        public virtual List<T> Query<T>(CommandType commandType, IDbConnection cnn, IDbTransaction transaction, string sql, object param, int commandTimeout = DBConstant.CommonTimeoutNon)
+        {
+            List<T> result = new List<T> { };
+            if (!string.IsNullOrEmpty(sql))
+            {
+                if (IsSupportDBParam(param))
+                {
+                    IDbCommand cmd = CreateCommand(cnn, sql, param, commandType, commandTimeout);
+                    result = (List<T>)Activator.CreateInstance<List<T>>();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        DoQuery(typeof(T), result, reader);
+                    }
+                }
+                else
+                {
+                    result = _PostgreSQLProvider.Query<T>(cnn, sql, param, commandType: commandType, transaction: transaction, commandTimeout: GetCommandTimeout(commandTimeout));
+                }
+            }
+            return result;
+        }
+
+        private void DoQuery(Type type, IList result, IDataReader reader)
+        {
+            Dictionary<string, KeyValuePair<string, PropertyInfo>> columnMappings = null;
+            while (reader.Read())
+            {
+                if (columnMappings == null)
+                {
+                    columnMappings = MappingObjectAndReader(type, reader);
+                }
+                if (columnMappings != null && columnMappings.Count > 0)
+                {
+                    var obj = Activator.CreateInstance(type);
+                    MappingValueFromReader(obj, reader, columnMappings);
+                    result.Add(obj);
+                }
+                else
+                {
+                    if(reader != null && reader.FieldCount > 0)
+                    {
+                        result.Add(reader[0]);
+                    }
+                }
             }
         }
 
@@ -334,7 +398,7 @@ namespace DemoWebAPI.Base.DL
                     throw new Exception($"IDBCommand CreateCommand - not support param type {param.GetType().Name}");
                 }
             }
-            cmd.CommandTimeout = GetcommandTimeout(commandTimeout);
+            cmd.CommandTimeout = GetCommandTimeout(commandTimeout);
             return cmd;
         }
 
@@ -360,7 +424,7 @@ namespace DemoWebAPI.Base.DL
             }
         }
 
-        private int GetcommandTimeout(int commandTimeout)
+        private int GetCommandTimeout(int commandTimeout)
         {
             return 90;
         }

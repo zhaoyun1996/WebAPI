@@ -106,7 +106,7 @@ namespace DemoWebAPI.Base.Model
                 TableAttribute tableAttribute = GetTableAttribute(t);
                 if (tableAttribute != null)
                 {
-                    schemaName = tableAttribute.Name;
+                    schemaName = tableAttribute.Schema;
                 }
             }
             return schemaName;

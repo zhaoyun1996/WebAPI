@@ -25,7 +25,7 @@ namespace DemoWebAPI.Base.Model
         public DBParam(string parameterName, string dataTypeName, object value)
         {
             this.ParameterName = parameterName;
-            this.DBDataType = dataTypeName;
+            this.DataTypeName = dataTypeName;
             this.Value = value;
         }
 
