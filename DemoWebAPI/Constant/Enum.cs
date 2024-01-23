@@ -82,5 +82,22 @@
             smallint = 18,
             smallint_arr = 19
         }
+
+        public enum EnumColDataType
+        {
+            JSON = 1
+        }
+
+        public enum EnumDataType : int
+        {
+            None = 0,
+            String = 1,
+            Boolean = 2,
+            DateTime = 3,
+            Number = 4,
+            Decimal = 5,
+            DateTimeFull = 6,
+            Guid = 10
+        }
     }
 }

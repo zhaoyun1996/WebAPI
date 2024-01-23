@@ -149,7 +149,8 @@ namespace DemoWebAPI.Base.Model
                 }
                 else
                 {
-                    foreach (KeyValuePair<string, object> item in param) {
+                    foreach (KeyValuePair<string, object> item in param)
+                    {
                         AppendParam(item.Key, item.Value);
                     }
                 }
@@ -179,7 +180,7 @@ namespace DemoWebAPI.Base.Model
     public class ScriptHelperOutputSaveBatch : ScriptHelperOutputDBParam
     {
         public Dictionary<string, PropertyInfo> FieldBuildScripts { get; set; } = new Dictionary<string, PropertyInfo>();
-        
+
         public Dictionary<string, PropertyInfo> FieldNotNulls { get; set; } = new Dictionary<string, PropertyInfo>();
 
         public ScriptHelperOutputSaveBatch() { }
@@ -192,7 +193,7 @@ namespace DemoWebAPI.Base.Model
 
         public void AppendFieldNotNulls(string columnName, PropertyInfo key)
         {
-            if(!this.FieldNotNulls.ContainsKey(columnName))
+            if (!this.FieldNotNulls.ContainsKey(columnName))
             {
                 this.FieldNotNulls.Add(columnName, key);
             }
@@ -208,7 +209,7 @@ namespace DemoWebAPI.Base.Model
 
         public void AppendParam(Dictionary<PropertyInfo, List<object>> dataParam, string sufixParamName = "")
         {
-            foreach(KeyValuePair<PropertyInfo, List<object>> item in dataParam)
+            foreach (KeyValuePair<PropertyInfo, List<object>> item in dataParam)
             {
                 if (this.FieldNotNulls != null && this.FieldNotNulls.ContainsKey($"{item.Key.Name}{sufixParamName}"))
                 {
@@ -228,10 +229,39 @@ namespace DemoWebAPI.Base.Model
             return $"select {string.Join($",{Environment.NewLine} ", arrayParameterNames)} from unnest ({string.Join($",{Environment.NewLine} ", arrayParameterNames.Select(t => $":{t}"))}) as b({string.Join($",{Environment.NewLine} ", arrayParameterNames)})";
         }
 
-        public Dictionary<string, string> GetFieldAndParam(ModelState, string primaryKey = "", string sufixParamName = "", string before = "@", string after = "")
+        public Dictionary<string, string> GetFieldAndParam(ModelState modelState, string primaryKey = "", string sufixParamName = "", string before = "@", string after = "")
         {
             Dictionary<string, string> sField = new Dictionary<string, string>();
-            string[] notUpdatField = 
+            string[] notUpdatField = { $"{primaryKey}{sufixParamName}", $"{ColumnNameCore.created_by}{sufixParamName}", $"{ColumnNameCore.created_date}{sufixParamName}", };
+            foreach (var item in this.FieldBuildScripts.Where(t => !notUpdatField.Contains(t.Key) || modelState != ModelState.Update))
+            {
+                var prop = item.Value;
+                string sFieldValue = item.Value.Name;
+                string sParamName = item.Key;
+                string sParamValue;
+                if (this.FieldNotNulls.ContainsKey(sParamName))
+                {
+                    if (ModelCoreHelper.IsDBJsonField(prop))
+                    {
+                        sParamName = $"CAST({before}{sParamName}{after} as json)";
+                    }
+                    else if(ModelCoreHelper.IsDBTSvectorField(prop))
+                    {
+                        sParamValue = $"to_tsvector({before}{sParamName}{after})";
+                    }
+                    else
+                    {
+                        sParamValue = $"{before}{sParamName}{after}";
+                    }
+                }
+                else
+                {
+                    sParamValue = "null";
+                }
+                sField.Add(sParamName, sFieldValue);
+            }
+
+            return sField;
         }
     }
 
@@ -256,7 +286,7 @@ namespace DemoWebAPI.Base.Model
         public ScriptHelperOutputDBParam Append(ScriptHelperOutputDBParam scriptHelperOutput, string endScript = "")
         {
             base.Append(scriptHelperOutput, endScript);
-            if(scriptHelperOutput != null)
+            if (scriptHelperOutput != null)
             {
                 AppendParam(scriptHelperOutput.Param);
             }
@@ -265,15 +295,15 @@ namespace DemoWebAPI.Base.Model
 
         public void AppendType(string key, Type type)
         {
-            if(string.IsNullOrEmpty(key))
+            if (string.IsNullOrEmpty(key))
             {
                 key = type.Name;
             }
-            if(this.Types == null)
+            if (this.Types == null)
             {
                 this.Types = new Dictionary<string, Type>();
             }
-            if(!this.Types.ContainsKey(key))
+            if (!this.Types.ContainsKey(key))
             {
                 this.Types.Add(key, type);
             }
@@ -287,7 +317,7 @@ namespace DemoWebAPI.Base.Model
         {
             if (paramMISASupport != null && paramMISASupport.Count > 0)
             {
-                if(this.Param != null && this.Param.Count == 0)
+                if (this.Param != null && this.Param.Count == 0)
                 {
                     this.Param = paramMISASupport;
                 }
@@ -303,7 +333,7 @@ namespace DemoWebAPI.Base.Model
 
         public void AppendParam(Dictionary<string, object> param)
         {
-            if(param != null && param.Count > 0)
+            if (param != null && param.Count > 0)
             {
                 foreach (KeyValuePair<string, object> item in param)
                 {

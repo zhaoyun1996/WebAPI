@@ -5,7 +5,7 @@ using static DemoWebAPI.Constant.Enum;
 
 namespace DemoWebAPI.Base.BL
 {
-    public class BLBase<TModel>
+    public abstract class BLBase<TModel>
     {
         protected DLBase _dLBase = new DLBase();
 
