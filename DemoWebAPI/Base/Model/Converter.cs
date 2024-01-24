@@ -63,5 +63,14 @@ namespace DemoWebAPI.Base.Model
             }
             return _jsonSerializerSettings;
         }
+
+        public static T Deserialize<T>(string json, JsonSerializerSettings settings = null)
+        {
+            if (settings == null)
+            {
+                settings = GetJsonSerializerSettings();
+            }
+            return JsonConvert.DeserializeObject<T>(json, settings);
+        }
     }
 }

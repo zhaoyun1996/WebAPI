@@ -15,6 +15,11 @@ namespace DemoWebAPI.Base.Model
         [NotMapped]
         public ModelState state { get; set; }
 
+        /// <summary>
+        /// TODO
+        /// </summary>
+        public DateTime created_date { get; set; }
+
         public object SetAutoPrimaryKey()
         {
             PropertyInfo[] props = MemoryCacheService.GetPropertyInfo(this.GetType());

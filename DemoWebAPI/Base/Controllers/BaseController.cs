@@ -16,9 +16,9 @@ namespace DemoWebAPI.Base.Controllers
         }
 
         [HttpGet]
-        public virtual async Task<ServiceRespone> GetAll()
+        public virtual async Task<ServiceRespone> GetAll(string filter = "", string sort = "", string customFilter = "", string columns = "")
         {
-            return await _bLBase.GetAll();
+            return await _bLBase.GetAll(filter, sort, customFilter, columns);
         }
     }
 }

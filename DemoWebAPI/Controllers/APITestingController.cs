@@ -10,12 +10,6 @@ namespace DemoWebAPI.Controllers
     [ApiController]
     public class APITestingController : BaseController<account>
     {
-        [HttpGet("GetAccounts")]
-        public async Task<ServiceRespone> GetAccounts()
-        {
-            return await GetAll();
-        }
-
         [HttpPost("CreateAccount")]
         public async Task<ServiceRespone> CreateAccount(account account)
         {

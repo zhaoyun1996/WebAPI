@@ -8,12 +8,17 @@ using static DemoWebAPI.Constant.Enum;
 using System.ComponentModel.DataAnnotations;
 using static DemoWebAPI.Base.Model.ModelAttribute;
 using Dapper;
+using DemoWebAPI.Constant;
+using System.Net;
+using System.ComponentModel.Design;
 
 namespace DemoWebAPI.Base.DL
 {
     public partial class DLBase
     {
         protected PostgreSQLProvider _PostgreSQLProvider = new PostgreSQLProvider();
+        private Dictionary<string, Type> _types = new Dictionary<string, Type>();
+        private object syncLockTypes = new object();
 
         /// <summary>
         /// Thực thi lệnh tương tác với database, trả về kết quả 1 bảng
@@ -359,8 +364,7 @@ namespace DemoWebAPI.Base.DL
             string sql = "";
             string paging = "";
 
-            T model = Activator.CreateInstance<T>();
-            if(isEncoded)
+            if (isEncoded)
             {
                 filter = Converter.DecodeBase64Param(filter);
                 sort = Converter.DecodeBase64Param(sort);
@@ -371,7 +375,7 @@ namespace DemoWebAPI.Base.DL
             whereFilter = GridFilterParser.Parse(customFilter, whereFilter);
 
             var whereClause = whereFilter.GetWhereClause();
-            if(!string.IsNullOrEmpty(whereClause))
+            if (!string.IsNullOrEmpty(whereClause))
             {
                 whereClause = $" AND {whereClause}";
             }
@@ -382,10 +386,12 @@ namespace DemoWebAPI.Base.DL
             }
             else
             {
-                sql = GenerateSelectColumn<T>(columns, viewName);
+                sql = GenerateSelectByColumn<T>(columns, viewName);
             }
 
-            if(string.IsNullOrWhiteSpace(whereClause))
+            paging = GeneratePagingOld(1, Constants.MaxReturnRecord, sort);
+
+            if (string.IsNullOrWhiteSpace(whereClause))
             {
                 sql = $"{sql} {paging}";
             }
@@ -398,9 +404,117 @@ namespace DemoWebAPI.Base.DL
             return list;
         }
 
+        public virtual string GeneratePagingOld(int pageIndex, int pageSize, string sort, string selectedValue = null, bool isSort = true)
+        {
+            string sql = "";
+            List<SelectedValue> selectedValues = null;
+            if (!string.IsNullOrWhiteSpace(selectedValue))
+            {
+                selectedValues = Converter.Deserialize<List<SelectedValue>>(selectedValue);
+            }
+            if (!string.IsNullOrWhiteSpace(sort))
+            {
+                List<GridSortItem> sorts = Converter.Deserialize<List<GridSortItem>>(sort);
+
+                if (sort?.Count() > 0)
+                {
+                    foreach (var sortItem in sorts)
+                    {
+                        if (SecureUtil.DetectSqlInjection(sortItem.property))
+                        {
+                            throw new FormatException();
+                        }
+                        sql += $"{sortItem.property} {(sortItem.desc ? "DESC" : "ASC")}, ";
+                    }
+                    if (selectedValue != null)
+                    {
+                        foreach (var valueItem in selectedValues)
+                        {
+                            if (SecureUtil.DetectSqlInjection(valueItem.property))
+                            {
+                                throw new FormatException();
+                            }
+                            sql = $"iif({valueItem.property} = '{valueItem.value}',0,1) ASC, " + sql;
+                        }
+                    }
+                    sql = sql.Substring(0, sql.Length - 2);
+                    sql = $" ORDER BY {sql}";
+                }
+                else
+                {
+                    if (isSort)
+                    {
+                        sql = $" ORDER BY created_date DESC";
+                    }
+                }
+            }
+            else if (selectedValues != null)
+            {
+                foreach (var valueItem in selectedValues)
+                {
+                    if (SecureUtil.DetectSqlInjection(valueItem.property))
+                    {
+                        throw new FormatException();
+                    }
+                    sql = $"iif({valueItem.property} = '{valueItem.value}',0,1) ASC, " + sql;
+                }
+                sql = sql.Substring(0, sql.Length - 2);
+                sql = $" ORDER BY {sql}";
+            }
+            else
+            {
+                if (isSort)
+                {
+                    sql = $" ORDER BY created_date DESC";
+                }
+            }
+
+            if (pageSize > 0)
+            {
+                sql += $" OFFSET {(pageIndex - 1) * pageSize} ROWS FETCH NEXT {pageSize} ROWS ONLY";
+            }
+
+            return sql;
+        }
+
+        public string GenerateSelectByColumn<T>(string columns, string viewName = "", string table = "", DatabaseType dbType = DatabaseType.Business) where T : BaseModel
+        {
+            string sql = "";
+            viewName = SecureUtil.SafeSqlLiteral(viewName);
+            table = SecureUtil.SafeSqlLiteral(table);
+            var model = Activator.CreateInstance<T>();
+            var tableAttr = model.GetTableAttribute();
+            string schema = Constants.DefaultSchemaName;
+            if (tableAttr != null && tableAttr.Schema != null)
+            {
+                schema = tableAttr.Schema;
+            }
+
+            if (string.IsNullOrEmpty(viewName))
+            {
+                viewName = ((ViewAttribute)model.GetType().GetCustomAttributes(typeof(ViewAttribute), false).FirstOrDefault())?.ViewName;
+            }
+            columns = SecureUtil.SafeSqlLiteral(columns);
+            if (!string.IsNullOrEmpty(viewName))
+            {
+                sql = $"SELECT {columns} FROM {schema}.{viewName} WHERE 1=1";
+            }
+            else
+            {
+                string tableName = table;
+                if (string.IsNullOrEmpty(table))
+                {
+                    tableName = tableAttr.Name;
+                }
+                sql = $"SELECT {columns} FROM {schema}.{tableName} WHERE 1=1";
+            }
+
+            return sql;
+        }
+
         public List<T> QueryCommandTextOld<T>(DatabaseType databaseType, DatabaseSide dbSide, string sql, object param = null, int commandTimeout = -1)
         {
-            List<T> result = new List<T> ();
+            List<T> result = new List<T>();
             var cnn = GetConnection();
 
             try
@@ -416,12 +530,12 @@ namespace DemoWebAPI.Base.DL
             return result;
         }
 
-        public virtual string GenerateSelectAll<T>(string viewName = "", string table = "")
+        public virtual string GenerateSelectAll<T>(string viewName = "", string table = "", DatabaseType dbType = DatabaseType.Business, bool isGetEditVersion = true) where T : BaseModel
         {
             string sql = "";
             Type modelType = null;
             BaseModel model = null;
-            if(!string.IsNullOrEmpty(table))
+            if (!string.IsNullOrEmpty(table))
             {
                 modelType = GetModelType(table);
                 model = (BaseModel)Activator.CreateInstance(modelType);
@@ -431,7 +545,65 @@ namespace DemoWebAPI.Base.DL
                 model = Activator.CreateInstance<T>();
             }
 
+            var tableAttr = model.GetTableAttribute();
+            viewName = SecureUtil.SafeSqlLiteral(viewName);
+            table = SecureUtil.SafeSqlLiteral(table);
+            string schemaName = tableAttr.Schema;
+            if (string.IsNullOrEmpty(viewName))
+            {
+                viewName = ((ViewAttribute)model.GetType().GetCustomAttributes(typeof(ViewAttribute), false).FirstOrDefault())?.ViewName;
+            }
+
+            if (!string.IsNullOrEmpty(viewName))
+            {
+                sql = $"SELECT * FROM {schemaName}.{viewName} WHERE 1=1";
+            }
+            else
+            {
+                string tableName = table;
+                if (string.IsNullOrEmpty(table))
+                {
+                    tableName = tableAttr.Name;
+                }
+                if (model is ISubTable)
+                {
+                    sql = $"SELECT {((ISubTable)model).GetQueryColumn()} FROM {schemaName}.{viewName} WHERE 1=1";
+                }
+                else if (!isGetEditVersion)
+                {
+                    sql = $"SELECT * FROM {schemaName}.{tableName} WHERE 1=1";
+                }
+                else
+                {
+                    sql = $"SELECT *, {GetEditVersionColumn(schemaName + "." + tableName)} FROM {schemaName}.{tableName} WHERE 1=1";
+                }
+            }
+
             return sql;
+        }
+
+        protected string GetEditVersionColumn(string tableName)
+        {
+            return $"{tableName}.xmin as edit_version";
+        }
+
+        public virtual Type GetModelType(string typeName)
+        {
+            Type type = null;
+            lock (syncLockTypes)
+            {
+                if (_types.ContainsKey(typeName))
+                {
+                    type = _types[typeName];
+                }
+                else
+                {
+                    type = ModelHelper.GetType(typeName);
+                    _types.Add(typeName, type);
+                }
+            }
+
+            return type;
         }
 
         private void DoQuery(Type type, IList result, IDataReader reader)
@@ -451,7 +623,7 @@ namespace DemoWebAPI.Base.DL
                 }
                 else
                 {
-                    if(reader != null && reader.FieldCount > 0)
+                    if (reader != null && reader.FieldCount > 0)
                     {
                         result.Add(reader[0]);
                     }
