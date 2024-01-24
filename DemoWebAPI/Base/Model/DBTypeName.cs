@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using Npgsql.Internal.Postgres;
+using System.Collections;
+using static DemoWebAPI.Constant.Enum;
 
 namespace DemoWebAPI.Base.Model
 {
@@ -39,8 +41,70 @@ namespace DemoWebAPI.Base.Model
                 {
                     subType = dataType.GetElementType();
                 }
+                dataTypeName = GetDBTypeName(subType).ToString();
+            }
+            else
+            {
                 dataTypeName = GetDBTypeName(dataType).ToString();
             }
+            return dataTypeName;
+        }
+
+        public static DBDataType GetDBTypeName(Type dataType)
+        {
+            DBDataType dataTypeName = DBDataType.none;
+            if(dataType != null)
+            {
+                if(dataType == typeof(long) || dataType == typeof(long?))
+                {
+                    dataTypeName = DBDataType.bigint;
+                }
+                else if (dataType == typeof(Int32) || dataType == typeof(Int32?))
+                {
+                    dataTypeName = DBDataType.integer;
+                }
+                else if (dataType == typeof(Int16) || dataType == typeof(Int16?))
+                {
+                    dataTypeName = DBDataType.smallint;
+                }
+                else if (dataType == typeof(Int64) || dataType == typeof(Int64?))
+                {
+                    dataTypeName = DBDataType.bigint;
+                }
+                else if (dataType == typeof(Guid) || dataType == typeof(Guid?))
+                {
+                    dataTypeName = DBDataType.uuid;
+                }
+                else if (dataType == typeof(Boolean) || dataType == typeof(Boolean?))
+                {
+                    dataTypeName = DBDataType.boolean;
+                }
+                else if (dataType == typeof(Decimal) || dataType == typeof(Decimal?) || dataType == typeof(Double) || dataType == typeof(Double?))
+                {
+                    dataTypeName = DBDataType.bigint;
+                }
+                else if (dataType == typeof(DateTime) || dataType == typeof(DateTime?))
+                {
+                    dataTypeName = DBDataType.timestamp;
+                }
+                else if (dataType == typeof(string) || dataType == typeof(String))
+                {
+                    dataTypeName = DBDataType.text;
+                }
+                else if (dataType.IsEnum || (Nullable.GetUnderlyingType(dataType) != null && Nullable.GetUnderlyingType(dataType).IsEnum))
+                {
+                    dataTypeName = DBDataType.integer;
+                }
+                else
+                {
+                    throw new Exception($"DBTypeName/GetDBTypeName, not support dataType:{dataType.Name}");
+                }
+            }
+            else
+            {
+                throw new Exception($"DBTypeName/GetDBTypeName, not support dataType is null");
+            }
+
             return dataTypeName;
         }
 

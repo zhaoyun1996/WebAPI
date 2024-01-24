@@ -27,5 +27,10 @@ namespace DemoWebAPI.Base.Model
                 this.ViewName = viewName;
             }
         }
+
+        [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+        public class UniqueFieldAttribute : Attribute
+        {
+        }
     }
 }

@@ -99,5 +99,17 @@
             DateTimeFull = 6,
             Guid = 10
         }
+
+        public enum DatabaseType : int
+        {
+            Business = 0
+        }
+
+        public enum DatabaseSide : int
+        {
+            WriteSide = 0,
+            ReadSide = 1,
+            ExtSide = 2,
+        }
     }
 }

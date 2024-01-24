@@ -5,6 +5,9 @@ using System.Data;
 using System.Collections;
 using System.Reflection;
 using static DemoWebAPI.Constant.Enum;
+using System.ComponentModel.DataAnnotations;
+using static DemoWebAPI.Base.Model.ModelAttribute;
+using Dapper;
 
 namespace DemoWebAPI.Base.DL
 {
@@ -337,6 +340,100 @@ namespace DemoWebAPI.Base.DL
             return result;
         }
 
+        public virtual void CheckDuplicate<T>(T model)
+        {
+            PropertyInfo[] props = MemoryCacheService.GetPropertyInfo(model.GetType());
+            PropertyInfo propertyInfoKey = null;
+            object key = "";
+            if (props != null)
+            {
+                propertyInfoKey = props.SingleOrDefault(p => p.GetCustomAttribute<UniqueFieldAttribute>(true) != null);
+                if (propertyInfoKey != null)
+                {
+                }
+            }
+        }
+
+        public List<T> GetAll<T>(DatabaseType dbType, string filter, string sort, string customFilter = "", string columns = "", string viewName = "", bool isEncoded = true) where T : BaseModel
+        {
+            string sql = "";
+            string paging = "";
+
+            T model = Activator.CreateInstance<T>();
+            if(isEncoded)
+            {
+                filter = Converter.DecodeBase64Param(filter);
+                sort = Converter.DecodeBase64Param(sort);
+                customFilter = Converter.DecodeBase64Param(customFilter);
+            }
+
+            WhereParameter whereFilter = GridFilterParser.Parse(filter);
+            whereFilter = GridFilterParser.Parse(customFilter, whereFilter);
+
+            var whereClause = whereFilter.GetWhereClause();
+            if(!string.IsNullOrEmpty(whereClause))
+            {
+                whereClause = $" AND {whereClause}";
+            }
+
+            if (string.IsNullOrEmpty(columns))
+            {
+                sql = GenerateSelectAll<T>(viewName);
+            }
+            else
+            {
+                sql = GenerateSelectColumn<T>(columns, viewName);
+            }
+
+            if(string.IsNullOrWhiteSpace(whereClause))
+            {
+                sql = $"{sql} {paging}";
+            }
+            else
+            {
+                sql = $"{sql} {whereClause} {paging}";
+            }
+
+            var list = QueryCommandTextOld<T>(dbType, DatabaseSide.ReadSide, sql, param: whereFilter.WhereValues);
+            return list;
+        }
+
+        public List<T> QueryCommandTextOld<T>(DatabaseType databaseType, DatabaseSide dbSide, string sql, object param = null, int commandTimeout = -1)
+        {
+            List<T> result = new List<T> ();
+            var cnn = GetConnection();
+
+            try
+            {
+                this.OpenConnection(cnn);
+                var query = cnn.Query<T>(sql, param, commandType: CommandType.Text, commandTimeout: GetCommandTimeout(commandTimeout));
+                result = query.ToList();
+            }
+            finally
+            {
+                this.CloseConnection(cnn);
+            }
+            return result;
+        }
+
+        public virtual string GenerateSelectAll<T>(string viewName = "", string table = "")
+        {
+            string sql = "";
+            Type modelType = null;
+            BaseModel model = null;
+            if(!string.IsNullOrEmpty(table))
+            {
+                modelType = GetModelType(table);
+                model = (BaseModel)Activator.CreateInstance(modelType);
+            }
+            else
+            {
+                model = Activator.CreateInstance<T>();
+            }
+
+            return sql;
+        }
+
         private void DoQuery(Type type, IList result, IDataReader reader)
         {
             Dictionary<string, KeyValuePair<string, PropertyInfo>> columnMappings = null;
@@ -525,9 +622,13 @@ namespace DemoWebAPI.Base.DL
             }
         }
 
-        private void DoSaveDataByState<T>(IDbConnection cnn, IDbTransaction tran, List<T> lstModel, ModelState modelState, ScriptHelperOutputDBParam scriptCustomBefore, ScriptHelperOutputDBParam scriptCustomAfter, string schema, string tableName, string primaryKey, int commandTimeout)
+        private void DoSaveDataByState<T>(IDbConnection cnn, IDbTransaction transaction, List<T> lstModel, ModelState modelState, ScriptHelperOutputDBParam scriptCustomBefore, ScriptHelperOutputDBParam scriptCustomAfter, string schema, string tableName, string primaryKey, int commandTimeout)
         {
-
+            ScriptHelperOutputSaveBatch tsql = new ScriptHelperOutputSaveBatch();
+            tsql.Append(scriptCustomBefore);
+            tsql.Append(ScriptHelper.GenerateScript(lstModel, modelState, schema, tableName, primaryKey));
+            tsql.Append(scriptCustomAfter);
+            ExecuteNonQuery(CommandType.Text, cnn, transaction, tsql.Script, tsql.Param, commandTimeout);
         }
 
         /// <summary>

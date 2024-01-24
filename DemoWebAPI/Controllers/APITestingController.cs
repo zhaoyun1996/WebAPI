@@ -11,19 +11,15 @@ namespace DemoWebAPI.Controllers
     public class APITestingController : BaseController<account>
     {
         [HttpGet("GetAccounts")]
-        public List<account> GetAccounts()
+        public async Task<ServiceRespone> GetAccounts()
         {
-            DLBase dLBase = new DLBase();
-            string sql = "select * from account;";
-
-            return new List<account>();
+            return await GetAll();
         }
 
         [HttpPost("CreateAccount")]
         public async Task<ServiceRespone> CreateAccount(account account)
         {
-            //string sql = $"INSERT INTO public.account\r\n(account_id, user_name, \"password\")\r\nVALUES({Guid.NewGuid()}, {account.user_name}, {account.password});";
-            return await base.Insert(account);
+            return await Insert(account);
         }
     }
 }

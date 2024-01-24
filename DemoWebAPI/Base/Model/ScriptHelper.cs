@@ -151,7 +151,7 @@ namespace DemoWebAPI.Base.Model
                         {
                             foreach (T o in lstModel)
                             {
-                                Dictionary<string, PropertyInfo> fieldDataChange = new Dictionary<string, PropertyInfo>();
+                                Dictionary<string, PropertyInfo> fieldDataChange = GetPropChangeData(allFields, primaryKey, o);
                                 foreach (var item in fieldDataChange)
                                 {
                                     fieldData[item.Key] = item.Value;
@@ -325,6 +325,67 @@ namespace DemoWebAPI.Base.Model
                 }
             }
             return scriptHelper;
+        }
+
+        private static Dictionary<string, PropertyInfo> GetPropChangeData(Dictionary<string, PropertyInfo> props, string primaryKey, object data)
+        {
+            Dictionary<string, PropertyInfo> fields = new Dictionary<string, PropertyInfo>();
+            BaseEntity model = null;
+            if(data is BaseEntity)
+            {
+                model = (BaseEntity)data;
+            }
+            if (model != null && !string.IsNullOrEmpty(primaryKey) && model.ContainProperty(ColumnNameCore.old_data) && model[ColumnNameCore.old_data] != null
+                && model[ColumnNameCore.old_data].GetType().FullName == model.GetType().FullName)
+            {
+                foreach (KeyValuePair<string, PropertyInfo> item in props)
+                {
+                    PropertyInfo pro = item.Value;
+                    object oldValue = pro.GetValue(model[ColumnNameCore.old_data]);
+                    object newValue = pro.GetValue(model);
+                    if (pro.Name == ColumnNameCore.created_date
+                        || pro.Name == ColumnNameCore.created_by
+                        || pro.Name == ColumnNameCore.modified_date
+                        || pro.Name == ColumnNameCore.modified_by)
+                    {
+                        continue;
+                    }
+                    if ((pro.PropertyType == typeof(DateTime) || pro.PropertyType == typeof(DateTime?))
+                        && oldValue != null
+                        && newValue != null
+                        && DateTime.Parse(oldValue?.ToString()).Date != DateTime.Parse(newValue?.ToString()).Date
+                        || (newValue != null && oldValue == null)
+                        || (newValue == null && oldValue != null)
+                        || (newValue != null && oldValue != null && !newValue.ToString().Equals(oldValue.ToString())))
+                    {
+                        fields.Add(item.Key, item.Value);
+                    }
+                }
+                if(fields != null && fields.Count > 0)
+                {
+                    if(props.ContainsKey(ColumnNameCore.modified_by)) {
+                        PropertyInfo pro = props[ColumnNameCore.modified_by];
+                        fields.Add(ColumnNameCore.modified_by, pro);
+                    }
+
+                    if (props.ContainsKey(ColumnNameCore.modified_date))
+                    {
+                        PropertyInfo pro = props[ColumnNameCore.modified_date];
+                        fields.Add(ColumnNameCore.modified_date, pro);
+                    }
+
+                    if (props.ContainsKey(primaryKey))
+                    {
+                        PropertyInfo pro = props[primaryKey];
+                        fields.Add(primaryKey, pro);
+                    }
+                }
+            }
+            else
+            {
+                fields = props;
+            }
+            return fields;
         }
     }
 }

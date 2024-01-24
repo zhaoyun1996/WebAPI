@@ -201,9 +201,9 @@ namespace DemoWebAPI.Base.Model
 
         public void AppendFieldBuildScripts(string columnName, PropertyInfo key)
         {
-            if (!this.FieldNotNulls.ContainsKey(columnName))
+            if (!this.FieldBuildScripts.ContainsKey(columnName))
             {
-                this.FieldNotNulls.Add(columnName, key);
+                this.FieldBuildScripts.Add(columnName, key);
             }
         }
 
@@ -243,7 +243,7 @@ namespace DemoWebAPI.Base.Model
                 {
                     if (ModelCoreHelper.IsDBJsonField(prop))
                     {
-                        sParamName = $"CAST({before}{sParamName}{after} as json)";
+                        sParamValue = $"CAST({before}{sParamName}{after} as json)";
                     }
                     else if(ModelCoreHelper.IsDBTSvectorField(prop))
                     {
@@ -258,7 +258,7 @@ namespace DemoWebAPI.Base.Model
                 {
                     sParamValue = "null";
                 }
-                sField.Add(sParamName, sFieldValue);
+                sField.Add(sFieldValue, sParamValue);
             }
 
             return sField;
@@ -355,7 +355,7 @@ namespace DemoWebAPI.Base.Model
 
         public void AppendParam(string parameterName, string dataTypeName, object value)
         {
-            if (dataTypeName != DBTypeName.none)
+            if (dataTypeName == DBTypeName.none)
             {
                 dataTypeName = DBTypeName.GetDBTypeName(value);
             }
@@ -365,7 +365,7 @@ namespace DemoWebAPI.Base.Model
         public void AppendParam(string parameterName, DBDataType dbDataType, object value)
         {
             string dataTypeName = dbDataType.ToString();
-            if (dataTypeName != DBTypeName.none)
+            if (dataTypeName == DBTypeName.none)
             {
                 dataTypeName = DBTypeName.GetDBTypeName(value);
                 AppendParam(new DBParam(parameterName, dataTypeName, value));
