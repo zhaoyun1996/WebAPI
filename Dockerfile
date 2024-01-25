@@ -1,5 +1,5 @@
 # Use the official .NET Core SDK as a base image
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build-env
+FROM mcr.microsoft.com/dotnet/core/sdk:8.0 AS build-env
 
 # Copy the .csproj file and restore dependencies
 COPY *.sln ./
@@ -12,10 +12,10 @@ COPY . ./
 RUN dotnet publish -c Release -o out
 
 # Use the official .NET Core runtime as a base image for the final stage
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
+FROM mcr.microsoft.com/dotnet/core/aspnet:8.0
 
 # Copy the built application from the build stage
 COPY --from=build-env /app/out .
 
 # Specify the entry point for the application
-ENTRYPOINT ["dotnet", "WebApi.dll"]
+ENTRYPOINT ["dotnet", "DemoWebAPI.dll"]
