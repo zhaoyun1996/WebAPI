@@ -33,13 +33,25 @@ namespace DemoWebAPI.Base.BL
                     return res;
                 }
 
-                this._dLBase.CheckDuplicate(model);
-                model.state = ModelState.Insert;
-                model.SetAutoPrimaryKey();
                 cnn = this._dLBase.GetConnection();
                 this._dLBase.OpenConnection(cnn);
-
                 transaction = cnn.BeginTransaction(IsolationLevel.ReadUncommitted);
+
+                bool checkDuplicate = this._dLBase.CheckDuplicate(model);
+                if(checkDuplicate)
+                {
+                    res.OnError(ServiceResponseCode.Duplicate);
+                    return res;
+                }
+
+                model.state = ModelState.Insert;
+                model.SetAutoPrimaryKey();
+
+                model.created_by = "admin";
+                model.modified_by = "admin";
+                model.created_date = DateTime.Now;
+                model.modified_date = DateTime.Now;
+
                 Dictionary<object, Exception> result = this._dLBase.DoSaveBatchData(cnn, transaction, new List<TModel> { model }, ModelState.Insert);
 
                 if (result != null && result.Count > 0)

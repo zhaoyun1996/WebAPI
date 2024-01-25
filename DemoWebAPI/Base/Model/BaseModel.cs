@@ -15,10 +15,13 @@ namespace DemoWebAPI.Base.Model
         [NotMapped]
         public ModelState state { get; set; }
 
-        /// <summary>
-        /// TODO
-        /// </summary>
-        public DateTime created_date { get; set; }
+        public DateTime? created_date { get; set; }
+
+        public DateTime? modified_date { get; set; }
+
+        public string? created_by { get; set; }
+
+        public string? modified_by { get; set; }
 
         public object SetAutoPrimaryKey()
         {

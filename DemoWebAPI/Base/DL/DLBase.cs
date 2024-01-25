@@ -11,6 +11,7 @@ using Dapper;
 using DemoWebAPI.Constant;
 using System.Net;
 using System.ComponentModel.Design;
+using System.Transactions;
 
 namespace DemoWebAPI.Base.DL
 {
@@ -345,9 +346,10 @@ namespace DemoWebAPI.Base.DL
             return result;
         }
 
-        public virtual void CheckDuplicate<T>(T model)
+        public virtual bool CheckDuplicate<T>(T model) where T : BaseModel
         {
-            PropertyInfo[] props = MemoryCacheService.GetPropertyInfo(model.GetType());
+            Type type = model.GetType();
+            PropertyInfo[] props = MemoryCacheService.GetPropertyInfo(type);
             PropertyInfo propertyInfoKey = null;
             object key = "";
             if (props != null)
@@ -355,8 +357,18 @@ namespace DemoWebAPI.Base.DL
                 propertyInfoKey = props.SingleOrDefault(p => p.GetCustomAttribute<UniqueFieldAttribute>(true) != null);
                 if (propertyInfoKey != null)
                 {
+                    var tableAttr = model.GetTableAttribute();
+                    var schema = tableAttr != null ? tableAttr.Schema : Constants.DefaultSchemaName;
+                    var sql = $"select count(*) from {schema}.{type.Name} where {propertyInfoKey.Name} = '{model.GetValueByPropertyName(propertyInfoKey.Name)}' limit 1";
+                    List<int> data = QueryCommandTextOld<int>(DatabaseType.Business, DatabaseSide.ReadSide, sql);
+                    if(data != null && data.Count > 0 && data[0] > 0)
+                    {
+                        return true;
+                    }
                 }
             }
+
+            return false;
         }
 
         public List<T> GetAll<T>(DatabaseType dbType, string filter, string sort, string customFilter = "", string columns = "", string viewName = "", bool isEncoded = true) where T : BaseModel
