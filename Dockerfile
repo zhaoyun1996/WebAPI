@@ -12,7 +12,7 @@ RUN dotnet publish -c Release -o out
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 
 # Sao chép ứng dụng đã xây dựng từ bước xây dựng
-COPY --from=build-env /app/out .
+COPY --from=build-env /out .
 
 # Chỉ định điểm nhập cho ứng dụng
 ENTRYPOINT ["dotnet", "DemoWebAPI.dll"]
