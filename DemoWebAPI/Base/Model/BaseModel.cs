@@ -25,7 +25,7 @@ namespace DemoWebAPI.Base.Model
 
         public object SetAutoPrimaryKey()
         {
-            PropertyInfo[] props = MemoryCacheService.GetPropertyInfo(this.GetType());
+            PropertyInfo[] props = MemoryCacheService.GetPropertyInfo(GetType());
             PropertyInfo propertyInfoKey = null;
             object key = "";
             if(props != null)
@@ -33,7 +33,7 @@ namespace DemoWebAPI.Base.Model
                 propertyInfoKey = props.SingleOrDefault(p => p.GetCustomAttribute<KeyAttribute>(true) != null);
                 if(propertyInfoKey != null)
                 {
-                    key = this.SetAutoPrimaryKey(propertyInfoKey);
+                    key = SetAutoPrimaryKey(propertyInfoKey);
                 }
             }
             return key;

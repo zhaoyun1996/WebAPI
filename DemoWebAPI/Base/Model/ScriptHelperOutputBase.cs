@@ -18,7 +18,7 @@ namespace DemoWebAPI.Base.Model
 
         public ScriptHelperOutputBase(string script)
         {
-            this.AppendScript(script);
+            AppendScript(script);
         }
 
         public virtual object GetParam()
@@ -51,18 +51,18 @@ namespace DemoWebAPI.Base.Model
         {
             if (!string.IsNullOrEmpty(script) && ValidateScript(script))
             {
-                if (!string.IsNullOrEmpty(this.Script))
+                if (!string.IsNullOrEmpty(Script))
                 {
-                    this.Script = $"{this.Script}{script}";
+                    Script = $"{Script}{script}";
                 }
                 else
                 {
-                    this.Script = script;
+                    Script = script;
                 }
-                this.Script = this.Script.Trim();
-                if (!string.IsNullOrEmpty(endScript) && !this.Script.EndsWith(endScript))
+                Script = Script.Trim();
+                if (!string.IsNullOrEmpty(endScript) && !Script.EndsWith(endScript))
                 {
-                    this.Script = $"{this.Script}{endScript}";
+                    Script = $"{Script}{endScript}";
                 }
             }
         }
@@ -117,12 +117,12 @@ namespace DemoWebAPI.Base.Model
 
         public ScriptHelperOutput(string script, Dictionary<string, object> param) : base(script)
         {
-            this.AppendParam(param);
+            AppendParam(param);
         }
 
         public override object GetParam()
         {
-            return this.Param;
+            return Param;
         }
 
         public ScriptHelperOutput Append(ScriptHelperOutput scriptHelperOutput, string endScript = "")
@@ -143,9 +143,9 @@ namespace DemoWebAPI.Base.Model
         {
             if (param != null && param.Count > 0)
             {
-                if (this.Param != null || this.Param.Count == 0)
+                if (Param != null || Param.Count == 0)
                 {
-                    this.Param = param;
+                    Param = param;
                 }
                 else
                 {
@@ -163,14 +163,14 @@ namespace DemoWebAPI.Base.Model
         /// <param name="param"></param>
         public void AppendParam(string key, object value)
         {
-            if (!this.Param.ContainsKey(key))
+            if (!Param.ContainsKey(key))
             {
                 if (CheckSupportParamType(value))
                 {
-                    this.Param.Add(key, value);
+                    Param.Add(key, value);
                 }
             }
-            else if (this.Param[key] != null && value != null && this.Param[key].ToString() != value.ToString())
+            else if (Param[key] != null && value != null && Param[key].ToString() != value.ToString())
             {
                 throw new Exception($"tham số {key} không thể nhận nhiều giá trị khác nhau");
             }
@@ -187,23 +187,23 @@ namespace DemoWebAPI.Base.Model
 
         public ScriptHelperOutputSaveBatch(string script, List<DBParam> param)
         {
-            this.AppendScript(script);
-            this.AppendParam(param);
+            AppendScript(script);
+            AppendParam(param);
         }
 
         public void AppendFieldNotNulls(string columnName, PropertyInfo key)
         {
-            if (!this.FieldNotNulls.ContainsKey(columnName))
+            if (!FieldNotNulls.ContainsKey(columnName))
             {
-                this.FieldNotNulls.Add(columnName, key);
+                FieldNotNulls.Add(columnName, key);
             }
         }
 
         public void AppendFieldBuildScripts(string columnName, PropertyInfo key)
         {
-            if (!this.FieldBuildScripts.ContainsKey(columnName))
+            if (!FieldBuildScripts.ContainsKey(columnName))
             {
-                this.FieldBuildScripts.Add(columnName, key);
+                FieldBuildScripts.Add(columnName, key);
             }
         }
 
@@ -211,16 +211,16 @@ namespace DemoWebAPI.Base.Model
         {
             foreach (KeyValuePair<PropertyInfo, List<object>> item in dataParam)
             {
-                if (this.FieldNotNulls != null && this.FieldNotNulls.ContainsKey($"{item.Key.Name}{sufixParamName}"))
+                if (FieldNotNulls != null && FieldNotNulls.ContainsKey($"{item.Key.Name}{sufixParamName}"))
                 {
-                    this.AppendParam($"{item.Key.Name}{sufixParamName}", $"{DBTypeName.GetDBTypeName(item.Key.PropertyType)}[]", item.Value.ToArray());
+                    AppendParam($"{item.Key.Name}{sufixParamName}", $"{DBTypeName.GetDBTypeName(item.Key.PropertyType)}[]", item.Value.ToArray());
                 }
             }
         }
 
         public string GetUnnestTableScript()
         {
-            List<string> fieldNotNulls = this.FieldNotNulls.Keys.ToList();
+            List<string> fieldNotNulls = FieldNotNulls.Keys.ToList();
             return GetUnnestTableScript(fieldNotNulls);
         }
 
@@ -233,13 +233,13 @@ namespace DemoWebAPI.Base.Model
         {
             Dictionary<string, string> sField = new Dictionary<string, string>();
             string[] notUpdatField = { $"{primaryKey}{sufixParamName}", $"{ColumnNameCore.created_by}{sufixParamName}", $"{ColumnNameCore.created_date}{sufixParamName}", };
-            foreach (var item in this.FieldBuildScripts.Where(t => !notUpdatField.Contains(t.Key) || modelState != ModelState.Update))
+            foreach (var item in FieldBuildScripts.Where(t => !notUpdatField.Contains(t.Key) || modelState != ModelState.Update))
             {
                 var prop = item.Value;
                 string sFieldValue = item.Value.Name;
                 string sParamName = item.Key;
                 string sParamValue;
-                if (this.FieldNotNulls.ContainsKey(sParamName))
+                if (FieldNotNulls.ContainsKey(sParamName))
                 {
                     if (ModelCoreHelper.IsDBJsonField(prop))
                     {
@@ -275,12 +275,12 @@ namespace DemoWebAPI.Base.Model
 
         public ScriptHelperOutputDBParam(string script, List<DBParam> param) : base(script)
         {
-            this.AppendParam(param);
+            AppendParam(param);
         }
 
         public override object GetParam()
         {
-            return this.Param;
+            return Param;
         }
 
         public ScriptHelperOutputDBParam Append(ScriptHelperOutputDBParam scriptHelperOutput, string endScript = "")
@@ -299,13 +299,13 @@ namespace DemoWebAPI.Base.Model
             {
                 key = type.Name;
             }
-            if (this.Types == null)
+            if (Types == null)
             {
-                this.Types = new Dictionary<string, Type>();
+                Types = new Dictionary<string, Type>();
             }
-            if (!this.Types.ContainsKey(key))
+            if (!Types.ContainsKey(key))
             {
-                this.Types.Add(key, type);
+                Types.Add(key, type);
             }
             else
             {
@@ -317,9 +317,9 @@ namespace DemoWebAPI.Base.Model
         {
             if (paramMISASupport != null && paramMISASupport.Count > 0)
             {
-                if (this.Param != null && this.Param.Count == 0)
+                if (Param != null && Param.Count == 0)
                 {
-                    this.Param = paramMISASupport;
+                    Param = paramMISASupport;
                 }
                 else
                 {
@@ -378,13 +378,13 @@ namespace DemoWebAPI.Base.Model
 
         public void AppendParam(DBParam param)
         {
-            if (!this.Param.ContainsKey(param.ParameterName))
+            if (!Param.ContainsKey(param.ParameterName))
             {
-                this.Param.Add(param.ParameterName, param);
+                Param.Add(param.ParameterName, param);
             }
-            else if (this.Param[param.ParameterName] != null && param.Value != null && this.Param[param.ParameterName] != null && this.Param[param.ParameterName].Value.ToString() != param.Value.ToString())
+            else if (Param[param.ParameterName] != null && param.Value != null && Param[param.ParameterName] != null && Param[param.ParameterName].Value.ToString() != param.Value.ToString())
             {
-                throw new Exception($"Tham số {param.DataTypeName} không thể nhận cùng lúc 2 giá trị khác nhau {this.Param[param.DataTypeName].Value} <> {param.Value}");
+                throw new Exception($"Tham số {param.DataTypeName} không thể nhận cùng lúc 2 giá trị khác nhau {Param[param.DataTypeName].Value} <> {param.Value}");
             }
         }
     }

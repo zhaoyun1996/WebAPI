@@ -22,67 +22,6 @@ namespace DemoWebAPI.Base.DL
         private object syncLockTypes = new object();
 
         /// <summary>
-        /// Thực thi lệnh tương tác với database, trả về kết quả 1 bảng
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="sql"></param>
-        /// <param name="param"></param>
-        /// <param name="commandType"></param>
-        /// <param name="commandTimeout"></param>
-        /// <returns></returns>
-        public List<T> ExecuteData<T>(string sql, List<DatabaseParamOld> param, CommandType commandType = CommandType.Text, int commandTimeout = 30)
-        {
-            List<T> result = Activator.CreateInstance<List<T>>();
-
-            //try
-            //{
-            //    IDbConnection cnn = this.GetConnection();
-            //    OpenConnection(cnn);
-
-            //    var cmd = cnn.CreateCommand();
-            //    cmd.CommandType = CommandType.Text;
-            //    cmd.CommandText = sql;
-            //    cmd.commandTimeout = commandTimeout;
-            //    InitCommandParam(param, cmd);
-
-            //    using (var reader = cmd.ExecuteReader())
-            //    {
-            //        Dictionary<string, KeyValuePair<string, PropertyInfo>> columnMappings = null;
-            //        Type type = typeof(T);
-            //        while (reader.Read())
-            //        {
-            //            if (columnMappings == null)
-            //            {
-            //                columnMappings = MappingObjectAndReader(type, reader);
-            //            }
-            //            T obj = Activator.CreateInstance<T>();
-            //            MappingValueFromReader(obj, reader, columnMappings);
-            //            result.Add(obj);
-            //        }
-            //    }
-            //}
-            //catch (Exception)
-            //{
-
-            //    throw;
-            //}
-            //finally
-            //{
-            //    if (cnn != null)
-            //    {
-            //        if (cnn.State != ConnectionState.Closed)
-            //        {
-            //            cnn.Close();
-            //        }
-
-            //        cnn.Dispose();
-            //    }
-            //}
-
-            return result;
-        }
-
-        /// <summary>
         /// Tạo kết nối
         /// </summary>
         /// <returns></returns>
@@ -531,13 +470,13 @@ namespace DemoWebAPI.Base.DL
 
             try
             {
-                this.OpenConnection(cnn);
+                OpenConnection(cnn);
                 var query = cnn.Query<T>(sql, param, commandType: CommandType.Text, commandTimeout: GetCommandTimeout(commandTimeout));
                 result = query.ToList();
             }
             finally
             {
-                this.CloseConnection(cnn);
+                CloseConnection(cnn);
             }
             return result;
         }
@@ -593,12 +532,7 @@ namespace DemoWebAPI.Base.DL
 
             return sql;
         }
-
-        protected string GetEditVersionColumn(string tableName)
-        {
-            return $"{tableName}.xmin as edit_version";
-        }
-
+        
         public virtual Type GetModelType(string typeName)
         {
             Type type = null;
@@ -616,6 +550,30 @@ namespace DemoWebAPI.Base.DL
             }
 
             return type;
+        }
+
+        public virtual void Delete<T>(T model) where T : BaseModel
+        {
+            Type type = model.GetType();
+            PropertyInfo[] props = MemoryCacheService.GetPropertyInfo(type);
+            PropertyInfo propertyInfoKey = null;
+            object key = "";
+            if (props != null)
+            {
+                propertyInfoKey = props.SingleOrDefault(p => p.GetCustomAttribute<KeyAttribute>(true) != null);
+                if (propertyInfoKey != null)
+                {
+                    var tableAttr = model.GetTableAttribute();
+                    var schema = tableAttr != null ? tableAttr.Schema : Constants.DefaultSchemaName;
+                    var sql = $"delete from {schema}.{type.Name} where {propertyInfoKey.Name} = '{model.GetPrimaryKeyValue()}'";
+                    List<int> data = QueryCommandTextOld<int>(DatabaseType.Business, DatabaseSide.WriteSide, sql);
+                }
+            }
+        }
+
+        protected string GetEditVersionColumn(string tableName)
+        {
+            return $"{tableName}.xmin as edit_version";
         }
 
         private void DoQuery(Type type, IList result, IDataReader reader)

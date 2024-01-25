@@ -14,7 +14,7 @@ namespace DemoWebAPI.Base.BL
         public virtual async Task<ServiceRespone> GetAll(string filter, string sort, string customFilter, string columns)
         {
             ServiceRespone res = new ServiceRespone();
-            res.Data = this._dLBase.GetAll<TModel>(DatabaseType.Business, filter, sort, customFilter, columns);
+            res.Data = _dLBase.GetAll<TModel>(DatabaseType.Business, filter, sort, customFilter, columns);
             return res;
         }
 
@@ -33,11 +33,11 @@ namespace DemoWebAPI.Base.BL
                     return res;
                 }
 
-                cnn = this._dLBase.GetConnection();
-                this._dLBase.OpenConnection(cnn);
+                cnn = _dLBase.GetConnection();
+                _dLBase.OpenConnection(cnn);
                 transaction = cnn.BeginTransaction(IsolationLevel.ReadUncommitted);
 
-                bool checkDuplicate = this._dLBase.CheckDuplicate(model);
+                bool checkDuplicate = _dLBase.CheckDuplicate(model);
                 if(checkDuplicate)
                 {
                     res.OnError(ServiceResponseCode.Duplicate);
@@ -52,7 +52,7 @@ namespace DemoWebAPI.Base.BL
                 model.created_date = DateTime.Now;
                 model.modified_date = DateTime.Now;
 
-                Dictionary<object, Exception> result = this._dLBase.DoSaveBatchData(cnn, transaction, new List<TModel> { model }, ModelState.Insert);
+                Dictionary<object, Exception> result = _dLBase.DoSaveBatchData(cnn, transaction, new List<TModel> { model }, ModelState.Insert);
 
                 if (result != null && result.Count > 0)
                 {
@@ -75,9 +75,24 @@ namespace DemoWebAPI.Base.BL
             }
             finally
             {
-                this._dLBase.CloseConnection(cnn);
+                _dLBase.CloseConnection(cnn);
             }
 
+            return res;
+        }
+
+        public virtual async Task<ServiceRespone> Delete(TModel model)
+        {
+            ServiceRespone res = new ServiceRespone();
+            try
+            {
+                _dLBase.Delete(model);
+                res.Data = model;
+            }
+            catch (Exception)
+            {
+                throw new Exception();
+            }
             return res;
         }
     }

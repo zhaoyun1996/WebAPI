@@ -17,16 +17,16 @@ namespace DemoWebAPI.Base.Model
 
         public string GetPrimaryKeyFieldName()
         {
-            return ModelCoreHelper.GetPrimaryKeyFieldName(this.GetType());
+            return ModelCoreHelper.GetPrimaryKeyFieldName(GetType());
         }
 
         public string GetTableName(bool ignoreView = false)
         {
             string tableName = "";
-            var tableAttr = (TableAttribute)this.GetType().GetCustomAttributes(typeof(TableAttribute), false).FirstOrDefault();
+            var tableAttr = (TableAttribute)GetType().GetCustomAttributes(typeof(TableAttribute), false).FirstOrDefault();
             if (!ignoreView)
             {
-                tableName = ((ViewAttribute)this.GetType().GetCustomAttributes(typeof(ViewAttribute), false).FirstOrDefault())?.ViewName;
+                tableName = ((ViewAttribute)GetType().GetCustomAttributes(typeof(ViewAttribute), false).FirstOrDefault())?.ViewName;
             }
             if (tableAttr != null && string.IsNullOrEmpty(tableName))
             {
@@ -47,7 +47,7 @@ namespace DemoWebAPI.Base.Model
 
         public object GetValueByAttribute(Type attrType)
         {
-            PropertyInfo[] props = MemoryCacheService.GetPropertyInfo(this.GetType());
+            PropertyInfo[] props = MemoryCacheService.GetPropertyInfo(GetType());
             PropertyInfo oPropertyInfoKey = null;
             if (props != null)
             {
@@ -67,7 +67,7 @@ namespace DemoWebAPI.Base.Model
 
         public TableAttribute GetTableAttribute()
         {
-            return ModelCoreHelper.GetTableAttribute(this.GetType());
+            return ModelCoreHelper.GetTableAttribute(GetType());
         }
 
         public string GetTableNameOnly()
@@ -82,7 +82,7 @@ namespace DemoWebAPI.Base.Model
 
         public string GetFieldName(Type attrType)
         {
-            return ModelCoreHelper.GetFieldName(this.GetType(), attrType);
+            return ModelCoreHelper.GetFieldName(GetType(), attrType);
         }
 
         [IgnoreDataMember()]
@@ -92,7 +92,7 @@ namespace DemoWebAPI.Base.Model
         {
             get
             {
-                PropertyInfo pi = this.GetType().GetProperty(propertyName);
+                PropertyInfo pi = GetType().GetProperty(propertyName);
                 if (pi != null)
                 {
                     return pi.GetValue(this, null);
@@ -104,7 +104,7 @@ namespace DemoWebAPI.Base.Model
             }
             set
             {
-                PropertyInfo pi = this.GetType().GetProperty(propertyName);
+                PropertyInfo pi = GetType().GetProperty(propertyName);
                 if (pi != null)
                 {
                     pi.SetValue(this, value, null);
@@ -118,7 +118,7 @@ namespace DemoWebAPI.Base.Model
 
         public bool ContainProperty(string property)
         {
-            PropertyInfo pi = this.GetType().GetProperty(property);
+            PropertyInfo pi = GetType().GetProperty(property);
             if (pi == null)
             {
                 return false;

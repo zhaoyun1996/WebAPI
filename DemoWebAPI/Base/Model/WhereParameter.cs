@@ -48,20 +48,20 @@ namespace DemoWebAPI.Base.Model
         public void AddWhere(string sWhereClause, Dictionary<string, object> dictWhereValues, List<object> paramsDB = null)
         {
             StringBuilder stringBuilder = new StringBuilder();
-            this._whereClause += stringBuilder.ToString();
-            this._whereClause = $"({this._whereClause})";
+            _whereClause += stringBuilder.ToString();
+            _whereClause = $"({_whereClause})";
             if(dictWhereValues != null && dictWhereValues.Count > 0)
             {
                 foreach (KeyValuePair<string, object> current in dictWhereValues)
                 {
                     string key = current.Key;
-                    if(this._whereValues.ContainsKey(current.Key))
+                    if(_whereValues.ContainsKey(current.Key))
                     {
-                        this._whereValues[key] = current.Value;
+                        _whereValues[key] = current.Value;
                     }
                     else
                     {
-                        this._whereValues.Add(key, current.Value);
+                        _whereValues.Add(key, current.Value);
                     }
                 }
             }
@@ -75,7 +75,7 @@ namespace DemoWebAPI.Base.Model
         {
             if(oWhereParameter != null)
             {
-                this.AddWhere(oWhereParameter.WhereClause, oWhereParameter.WhereValues);
+                AddWhere(oWhereParameter.WhereClause, oWhereParameter.WhereValues);
             }
         }
 
@@ -129,7 +129,7 @@ namespace DemoWebAPI.Base.Model
 
         public string GetWhereClause()
         {
-            return this._whereClause;
+            return _whereClause;
         }
     }
 }

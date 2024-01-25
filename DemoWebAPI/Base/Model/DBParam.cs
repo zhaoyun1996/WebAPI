@@ -17,16 +17,16 @@ namespace DemoWebAPI.Base.Model
 
         public DBParam(string parameterName, DBDataType dataType, object value)
         {
-            this.ParameterName = parameterName;
-            this.DBDataType = dataType;
-            this.Value = value;
+            ParameterName = parameterName;
+            DBDataType = dataType;
+            Value = value;
         }
 
         public DBParam(string parameterName, string dataTypeName, object value)
         {
-            this.ParameterName = parameterName;
-            this.DataTypeName = dataTypeName;
-            this.Value = value;
+            ParameterName = parameterName;
+            DataTypeName = dataTypeName;
+            Value = value;
         }
 
         public string ParameterName { get; set; }

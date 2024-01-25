@@ -20,5 +20,11 @@ namespace DemoWebAPI.Base.Controllers
         {
             return await _bLBase.GetAll(filter, sort, customFilter, columns);
         }
+
+        [HttpDelete]
+        public virtual async Task<ServiceRespone> Delete(TModel model)
+        {
+            return await _bLBase.Delete(model);
+        }
     }
 }

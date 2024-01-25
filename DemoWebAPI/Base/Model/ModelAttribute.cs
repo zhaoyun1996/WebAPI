@@ -10,12 +10,12 @@ namespace DemoWebAPI.Base.Model
 
         public class ColDataTypeAttribute : Attribute
         {
-            public ColDataTypeAttribute(EnumColDataType cType)
-            {
-                this.cType = cType;
-            }
-
             public EnumColDataType cType;
+
+            public ColDataTypeAttribute(EnumColDataType colType)
+            {
+                cType = colType;
+            }
         }
 
         public class ViewAttribute : Attribute
@@ -24,7 +24,7 @@ namespace DemoWebAPI.Base.Model
 
             public ViewAttribute(string viewName)
             {
-                this.ViewName = viewName;
+                ViewName = viewName;
             }
         }
 

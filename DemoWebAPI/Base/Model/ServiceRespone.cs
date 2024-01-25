@@ -47,7 +47,7 @@ namespace DemoWebAPI.Base.Model
         {
             get
             {
-                return DateTime.Now - this.ServerTime;
+                return DateTime.Now - ServerTime;
             }
         }
 
@@ -62,7 +62,7 @@ namespace DemoWebAPI.Base.Model
         /// <returns></returns>
         public ServiceRespone OnSuccess(object data = null)
         {
-            this.Data = data;
+            Data = data;
 
             return this;
         }
@@ -74,9 +74,9 @@ namespace DemoWebAPI.Base.Model
         /// <returns></returns>
         public ServiceRespone OnForbidden(object data = null)
         {
-            this.Code = ServiceResponseCode.Forbidden;
-            this.Data = data;
-            this.SystemMessage = "Forbidden";
+            Code = ServiceResponseCode.Forbidden;
+            Data = data;
+            SystemMessage = "Forbidden";
             return this;
         }
 
@@ -89,9 +89,9 @@ namespace DemoWebAPI.Base.Model
         {
             if(ex != null)
             {
-                this.Success = false;
-                this.Code = ServiceResponseCode.Error;
-                this.SystemMessage = ex.ToString();
+                Success = false;
+                Code = ServiceResponseCode.Error;
+                SystemMessage = ex.ToString();
             }
 
             return this;
@@ -108,31 +108,31 @@ namespace DemoWebAPI.Base.Model
         /// <returns></returns>
         public ServiceRespone OnError(ServiceResponseCode code, int subCode = 0, object data = null, string userMessage = "Error while process request.", string systemMessage = "")
         {
-            this.Success = false;
-            this.Code = code;
+            Success = false;
+            Code = code;
             
             if(subCode != 0)
             {
-                this.SubCode = subCode;
+                SubCode = subCode;
             }
 
             if(data != null)
             {
-                this.Data = data;
+                Data = data;
             }
 
             if(!string.IsNullOrEmpty(userMessage))
             {
-                this.UserMessage = userMessage;
+                UserMessage = userMessage;
             }
 
             if(string.IsNullOrEmpty(systemMessage))
             {
-                this.SystemMessage = code.ToString();
+                SystemMessage = code.ToString();
             }
             else
             {
-                this.SystemMessage = systemMessage;
+                SystemMessage = systemMessage;
             }
 
             return this;
