@@ -1,21 +1,18 @@
-# Use the official .NET Core SDK as a base image
+# Sử dụng hình ảnh cơ bản của .NET Core SDK
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build-env
 
-# Copy the .csproj file and restore dependencies
-COPY *.sln ./
+# Sao chép toàn bộ giải pháp
+COPY . .
+
+# Xây dựng ứng dụng
 RUN dotnet restore
-
-# Copy the remaining application files
-COPY . ./
-
-# Build the application
 RUN dotnet publish -c Release -o out
 
-# Use the official .NET Core runtime as a base image for the final stage
+# Sử dụng hình ảnh cơ bản của .NET Core runtime cho bước cuối cùng
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
 
-# Copy the built application from the build stage
+# Sao chép ứng dụng đã xây dựng từ bước xây dựng
 COPY --from=build-env /app/out .
 
-# Specify the entry point for the application
+# Chỉ định điểm nhập cho ứng dụng
 ENTRYPOINT ["dotnet", "DemoWebAPI.dll"]
