@@ -8,6 +8,9 @@ COPY . .
 RUN dotnet restore
 RUN dotnet publish -c Release -o out
 
+# Sử dụng hình ảnh cơ bản của .NET Core runtime cho bước cuối cùng
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+
 # Sao chép ứng dụng đã xây dựng từ bước xây dựng
 COPY --from=build-env /out .
 
