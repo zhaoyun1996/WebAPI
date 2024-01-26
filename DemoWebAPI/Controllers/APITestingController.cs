@@ -15,5 +15,11 @@ namespace DemoWebAPI.Controllers
         {
             return await Insert(account);
         }
+
+        [HttpPut("EditAccount")]
+        public async Task<ServiceRespone> EditAccount(account account)
+        {
+            return await Edit(account);
+        }
     }
 }

@@ -26,5 +26,11 @@ namespace DemoWebAPI.Base.Controllers
         {
             return await _bLBase.Delete(model);
         }
+
+        [HttpPut]
+        public virtual async Task<ServiceRespone> Edit(TModel model)
+        {
+            return await _bLBase.Edit(model);
+        }
     }
 }

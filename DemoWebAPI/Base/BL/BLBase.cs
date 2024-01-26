@@ -37,6 +37,8 @@ namespace DemoWebAPI.Base.BL
                 _dLBase.OpenConnection(cnn);
                 transaction = cnn.BeginTransaction(IsolationLevel.ReadUncommitted);
 
+                model.state = ModelState.Insert;
+
                 bool checkDuplicate = _dLBase.CheckDuplicate(model);
                 if(checkDuplicate)
                 {
@@ -44,7 +46,6 @@ namespace DemoWebAPI.Base.BL
                     return res;
                 }
 
-                model.state = ModelState.Insert;
                 model.SetAutoPrimaryKey();
 
                 model.created_by = "admin";
@@ -93,6 +94,67 @@ namespace DemoWebAPI.Base.BL
             {
                 throw new Exception();
             }
+            return res;
+        }
+
+        public virtual async Task<ServiceRespone> Edit(TModel model)
+        {
+            ServiceRespone res = new ServiceRespone();
+
+            IDbConnection cnn = null;
+            IDbTransaction transaction = null;
+
+            try
+            {
+                if (model == null)
+                {
+                    res.OnError(ServiceResponseCode.InvalidData);
+                    return res;
+                }
+
+                cnn = _dLBase.GetConnection();
+                _dLBase.OpenConnection(cnn);
+                transaction = cnn.BeginTransaction(IsolationLevel.ReadUncommitted);
+
+                model.state = ModelState.Update;
+
+                bool checkDuplicate = _dLBase.CheckDuplicate(model);
+                if (checkDuplicate)
+                {
+                    res.OnError(ServiceResponseCode.Duplicate);
+                    return res;
+                }
+
+
+                model.modified_by = "admin";
+                model.modified_date = DateTime.UtcNow;
+
+                Dictionary<object, Exception> result = _dLBase.DoSaveBatchData(cnn, transaction, new List<TModel> { model }, ModelState.Update);
+
+                if (result != null && result.Count > 0)
+                {
+                    res.OnError(ServiceResponseCode.Error);
+                }
+                else
+                {
+                    res.Data = model;
+                }
+
+                transaction.Commit();
+            }
+            catch (Exception)
+            {
+                if (transaction != null)
+                {
+                    transaction.Rollback();
+                }
+                throw new Exception();
+            }
+            finally
+            {
+                _dLBase.CloseConnection(cnn);
+            }
+
             return res;
         }
     }

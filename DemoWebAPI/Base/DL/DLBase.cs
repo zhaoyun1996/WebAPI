@@ -289,16 +289,20 @@ namespace DemoWebAPI.Base.DL
         {
             Type type = model.GetType();
             PropertyInfo[] props = MemoryCacheService.GetPropertyInfo(type);
-            PropertyInfo propertyInfoKey = null;
-            object key = "";
+            ModelState modelState = (ModelState)model.GetValueByPropertyName(ColumnName.state);
             if (props != null)
             {
-                propertyInfoKey = props.SingleOrDefault(p => p.GetCustomAttribute<UniqueFieldAttribute>(true) != null);
+                PropertyInfo propertyInfoKey = props.SingleOrDefault(p => p.GetCustomAttribute<UniqueFieldAttribute>(true) != null);
+                PropertyInfo primaryInfoKey = props.SingleOrDefault(p => p.GetCustomAttribute<KeyAttribute>(true) != null);
                 if (propertyInfoKey != null)
                 {
                     var tableAttr = model.GetTableAttribute();
                     var schema = tableAttr != null ? tableAttr.Schema : Constants.DefaultSchemaName;
                     var sql = $"select count(*) from {schema}.{type.Name} where {propertyInfoKey.Name} = '{model.GetValueByPropertyName(propertyInfoKey.Name)}' limit 1";
+                    if(modelState == ModelState.Update && primaryInfoKey != null)
+                    {
+                        sql = $"select count(*) from {schema}.{type.Name} where {propertyInfoKey.Name} = '{model.GetValueByPropertyName(propertyInfoKey.Name)}' and {primaryInfoKey.Name} <> '{model.GetPrimaryKeyValue()}' limit 1";
+                    }
                     List<int> data = QueryCommandTextOld<int>(DatabaseType.Business, DatabaseSide.ReadSide, sql);
                     if(data != null && data.Count > 0 && data[0] > 0)
                     {
