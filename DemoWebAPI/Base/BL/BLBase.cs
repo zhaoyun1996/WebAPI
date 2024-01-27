@@ -2,6 +2,7 @@
 using DemoWebAPI.Base.Model;
 using System.Data;
 using System.Reflection;
+using System.Text.Json.Serialization;
 using static DemoWebAPI.Constant.Enum;
 using static Npgsql.Replication.PgOutput.Messages.RelationMessage;
 
@@ -142,13 +143,13 @@ namespace DemoWebAPI.Base.BL
 
                 transaction.Commit();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 if (transaction != null)
                 {
                     transaction.Rollback();
                 }
-                throw new Exception();
+                throw new Exception("Edit ex: " + Converter.Serialize(ex));
             }
             finally
             {

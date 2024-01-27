@@ -706,7 +706,16 @@ namespace DemoWebAPI.Base.DL
                 tsql.AppendScript(scriptItem);
                 tsql.AppendParam(scriptHelper.Param);
                 tsql.Append(scriptCustomAfter);
-                ExecuteNonQuery(CommandType.Text, cnn, transaction, tsql.Script, tsql.Param, commandTimeout);
+
+                try
+                {
+                    ExecuteNonQuery(CommandType.Text, cnn, transaction, tsql.Script, tsql.Param, commandTimeout);
+                }
+                catch (Exception ex)
+                {
+
+                    throw new Exception("DoSaveDataByColumnName ex: " + Converter.Serialize(ex));
+                }
             }
         }
 
