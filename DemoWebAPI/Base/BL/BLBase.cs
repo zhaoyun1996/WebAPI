@@ -50,8 +50,8 @@ namespace DemoWebAPI.Base.BL
 
                 model.created_by = "admin";
                 model.modified_by = "admin";
-                model.created_date = DateTime.Now;
-                model.modified_date = DateTime.Now;
+                model.created_date = DateTimeUtility.GetNow();
+                model.modified_date = DateTimeUtility.GetNow();
 
                 Dictionary<object, Exception> result = _dLBase.DoSaveBatchData(cnn, transaction, new List<TModel> { model }, ModelState.Insert);
 
@@ -127,7 +127,7 @@ namespace DemoWebAPI.Base.BL
 
 
                 model.modified_by = "admin";
-                model.modified_date = DateTime.UtcNow;
+                model.modified_date = DateTimeUtility.GetNow();
 
                 Dictionary<object, Exception> result = _dLBase.DoSaveBatchData(cnn, transaction, new List<TModel> { model }, ModelState.Update);
 

@@ -680,7 +680,7 @@ namespace DemoWebAPI.Base.DL
                     DoSaveDataNoneState<T>(cnn, transaction, lstModel, schema, tableName, primaryKey, updateByColumnsNames, scriptCustomBefore, scriptCustomAfter, commandTimeout);
                     break;
                 default:
-                    if (modelState == ModelState.Update)
+                    if (modelState == ModelState.Update && updateColumns != null && updateColumns.Count > 0 && updateByColumnsNames != null && updateByColumnsNames.Count > 0)
                     {
                         DoSaveDataByColumnName(cnn, transaction, lstModel, schema, tableName, updateColumns, updateByColumnsNames, scriptCustomBefore, scriptCustomAfter, commandTimeout);
                     }
