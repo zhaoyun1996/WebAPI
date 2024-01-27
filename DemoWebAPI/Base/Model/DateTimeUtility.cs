@@ -1,16 +1,27 @@
-﻿namespace DemoWebAPI.Base.Model
+﻿using System.Runtime.InteropServices;
+
+namespace DemoWebAPI.Base.Model
 {
-    public class DateTimeUtility
+    public static class DateTimeUtility
     {
+        public const string DefaultTimezonIdWindows = "SE Asia Standard Time";
+        public const string DefaultTimezonIdLinux = "Asia/Ho_Chi_Minh";
+
         public static DateTime GetNow()
         {
-            // Specify the Vietnam time zone (Indochina Time, UTC+7)
-            TimeZoneInfo vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            return DateTime.UtcNow.ToDefaultTimeZone();
+        }
 
-            // Get the current time in the Vietnam time zone
-            DateTime vietnamTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vietnamTimeZone);
-
-            return vietnamTime;
+        public static DateTime ToDefaultTimeZone(this DateTime time)
+        {
+            if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return TimeZoneInfo.ConvertTime(time, TimeZoneInfo.FindSystemTimeZoneById(DefaultTimezonIdWindows));
+            }
+            else
+            {
+                return TimeZoneInfo.ConvertTime(time, TimeZoneInfo.FindSystemTimeZoneById(DefaultTimezonIdLinux));
+            }
         }
     }
 }
