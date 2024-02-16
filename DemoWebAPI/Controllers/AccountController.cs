@@ -1,5 +1,6 @@
 ﻿using DemoWebAPI.Base.Controllers;
 using DemoWebAPI.Base.Model;
+using DemoWebAPI.BL;
 using DemoWebAPI.Model;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,8 +8,10 @@ namespace DemoWebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class APITestingController : BaseController<account>
+    public class AccountController : BaseController<account>
     {
+        protected BLAccount _bLAccount = new BLAccount();
+
         /// <summary>
         /// Thêm tài khoản
         /// </summary>
@@ -21,14 +24,14 @@ namespace DemoWebAPI.Controllers
         }
 
         /// <summary>
-        /// Sửa tài khoản
+        /// Đăng nhập
         /// </summary>
         /// <param name="account"></param>
         /// <returns></returns>
-        [HttpPut("EditAccount")]
-        public async Task<ServiceRespone> EditAccount(account account)
+        [HttpPost("Login")]
+        public async Task<ServiceRespone> Login(account account)
         {
-            return await Edit(account);
+            return await _bLAccount.Login(account);
         }
     }
 }

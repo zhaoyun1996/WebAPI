@@ -9,9 +9,6 @@ using System.ComponentModel.DataAnnotations;
 using static DemoWebAPI.Base.Model.ModelAttribute;
 using Dapper;
 using DemoWebAPI.Constant;
-using System.Net;
-using System.ComponentModel.Design;
-using System.Transactions;
 
 namespace DemoWebAPI.Base.DL
 {

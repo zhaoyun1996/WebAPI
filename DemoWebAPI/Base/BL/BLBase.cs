@@ -1,10 +1,7 @@
 ﻿using DemoWebAPI.Base.DL;
 using DemoWebAPI.Base.Model;
 using System.Data;
-using System.Reflection;
-using System.Text.Json.Serialization;
 using static DemoWebAPI.Constant.Enum;
-using static Npgsql.Replication.PgOutput.Messages.RelationMessage;
 
 namespace DemoWebAPI.Base.BL
 {
@@ -12,6 +9,14 @@ namespace DemoWebAPI.Base.BL
     {
         protected DLBase _dLBase = new DLBase();
 
+        /// <summary>
+        /// Lấy tất cả bản ghi
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <param name="sort"></param>
+        /// <param name="customFilter"></param>
+        /// <param name="columns"></param>
+        /// <returns></returns>
         public virtual async Task<ServiceRespone> GetAll(string filter, string sort, string customFilter, string columns)
         {
             ServiceRespone res = new ServiceRespone();
@@ -19,6 +24,12 @@ namespace DemoWebAPI.Base.BL
             return res;
         }
 
+        /// <summary>
+        /// Thêm mới bản ghi
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         public virtual async Task<ServiceRespone> Insert(TModel model)
         {
             ServiceRespone res = new ServiceRespone();
@@ -83,6 +94,12 @@ namespace DemoWebAPI.Base.BL
             return res;
         }
 
+        /// <summary>
+        /// Xóa bản ghi
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         public virtual async Task<ServiceRespone> Delete(TModel model)
         {
             ServiceRespone res = new ServiceRespone();
@@ -98,6 +115,12 @@ namespace DemoWebAPI.Base.BL
             return res;
         }
 
+        /// <summary>
+        /// Sửa bản ghi
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         public virtual async Task<ServiceRespone> Edit(TModel model)
         {
             ServiceRespone res = new ServiceRespone();

@@ -17,8 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="BL\" />
-    <Folder Include="DL\" />
     <Folder Include="Service\" />
   </ItemGroup>
 
