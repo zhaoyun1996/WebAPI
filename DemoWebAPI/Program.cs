@@ -1,4 +1,8 @@
-﻿var builder = WebApplication.CreateBuilder(args);
+﻿using DemoWebAPI.Core.Extensions;
+using DemoWebAPI.Core.Model;
+using Microsoft.Extensions.Options;
+
+var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
@@ -16,6 +20,19 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader());
 });
 
+IConfiguration configuration = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .Build();
+
+var appSettingSection = configuration.GetSection("AppSettings");
+builder.Services.Configure<AppSettings>(appSettingSection);
+builder.Services.AddJwtAuthorization(configuration);
+
+var centerConfig = new CenterConfig();
+new ConfigureFromConfigurationOptions<CenterConfig>(configuration).Configure(centerConfig);
+builder.Services.AddSingleton(centerConfig);
+
 var app = builder.Build();
 
 // Sử dụng Cors middleware
@@ -27,6 +44,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseSetAuthContextHandler(centerConfig.AppSettings.RealUrlCheckAuth);
 
 app.UseHttpsRedirection();
 
