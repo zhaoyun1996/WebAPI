@@ -49,57 +49,60 @@ namespace DemoWebAPI.BL
         /// <returns></returns>
         public virtual async Task<ServiceResponse> SetCacheRedis(ServiceResponse response, account account, CenterConfig config)
         {
-            var claimIdentity = new ClaimsIdentity();
-            claimIdentity.AddClaim(new Claim("aid", account != null ? "Auth-" + account.account_id.ToString() : ""));
-            claimIdentity.AddClaim(new Claim("una", account != null ? account.user_name : ""));
-
-            DateTime now = DateTimeUtility.GetNow();
-            var tokenExprired = now.AddSeconds(config.AppSettings.AccessTokenExpiredTime);
-            var key = Encoding.ASCII.GetBytes(config.AppSettings.JwtSecretKey);
-            var tokenDescriptor = new SecurityTokenDescriptor
+            if (account != null)
             {
-                Issuer = config.AppSettings.JwtIssuer,
-                Subject = claimIdentity,
-                Expires = tokenExprired,
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
+                var claimIdentity = new ClaimsIdentity();
+                claimIdentity.AddClaim(new Claim("aid", account.account_id.ToString()));
+                claimIdentity.AddClaim(new Claim("una", account.user_name));
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            SecurityToken kTokent = tokenHandler.CreateToken(tokenDescriptor);
-            string token = tokenHandler.WriteToken(kTokent);
-            object value = new
-            {
-                Token = token,
-                TokenExprired = tokenExprired
-            };
-
-            response.OnSuccess(new Dictionary<string, object>()
-            {
+                DateTime now = DateTimeUtility.GetNow();
+                var tokenExprired = now.AddSeconds(config.AppSettings.AccessTokenExpiredTime);
+                var key = Encoding.ASCII.GetBytes(config.AppSettings.JwtSecretKey);
+                var tokenDescriptor = new SecurityTokenDescriptor
                 {
-                    AccessToken, value
+                    Issuer = config.AppSettings.JwtIssuer,
+                    Subject = claimIdentity,
+                    Expires = tokenExprired,
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                };
+
+                var tokenHandler = new JwtSecurityTokenHandler();
+                SecurityToken kTokent = tokenHandler.CreateToken(tokenDescriptor);
+                string token = tokenHandler.WriteToken(kTokent);
+                object value = new
+                {
+                    Token = token,
+                    TokenExprired = tokenExprired
+                };
+
+                response.OnSuccess(new Dictionary<string, object>()
+                {
+                    {
+                        AccessToken, value
+                    }
+                });
+
+                // Lưu thông tin đăng nhập vào cache
+                ConnectionMultiplexer connectionCacheRedis = null;
+
+                try
+                {
+                    connectionCacheRedis = await _dLBase.GetConnectionCacheRedis();
+
+                    IDatabase db = connectionCacheRedis.GetDatabase();
+                    db.StringSet($"{AccessToken}_{account.account_id}", JsonConvert.SerializeObject(value));
+
+                    TimeSpan expiry = TimeSpan.FromSeconds(config.AppSettings.AccessTokenExpiredTime);
+                    bool keyExpirySet = db.KeyExpire(AccessToken, expiry);
                 }
-            });
-
-            // Lưu thông tin đăng nhập vào cache
-            ConnectionMultiplexer connectionCacheRedis = null;
-
-            try
-            {
-                connectionCacheRedis = await _dLBase.GetConnectionCacheRedis();
-
-                IDatabase db = connectionCacheRedis.GetDatabase();
-                db.StringSet(AccessToken, JsonConvert.SerializeObject(value));
-
-                TimeSpan expiry = TimeSpan.FromSeconds(config.AppSettings.AccessTokenExpiredTime);
-                bool keyExpirySet = db.KeyExpire(AccessToken, expiry);
-            }
-            catch (Exception)
-            {
-                throw new Exception();
-            }
-            finally
-            {
-                _dLBase.CloseConnectionCacheRedis(connectionCacheRedis);
+                catch (Exception)
+                {
+                    throw new Exception();
+                }
+                finally
+                {
+                    _dLBase.CloseConnectionCacheRedis(connectionCacheRedis);
+                }
             }
 
             return response;

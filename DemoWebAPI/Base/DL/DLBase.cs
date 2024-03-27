@@ -958,7 +958,7 @@ namespace DemoWebAPI.Base.DL
         /// Đóng connection string của cache redis
         /// </summary>
         /// <param name="connection"></param>
-        public void CloseConnectionCacheRedis(ConnectionMultiplexer connection)
+        public void CloseConnectionCacheRedis(ConnectionMultiplexer? connection)
         {
             if (connection != null)
             {

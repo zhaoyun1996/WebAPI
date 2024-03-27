@@ -1,7 +1,11 @@
-﻿using DemoWebAPI.Constant;
+﻿using Azure.Core;
+using DemoWebAPI.Base.DL;
+using DemoWebAPI.Constant;
 using DemoWebAPI.Core.Cache;
 using DemoWebAPI.Core.Model;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using StackExchange.Redis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
@@ -9,6 +13,7 @@ namespace DemoWebAPI.Core.Extensions
 {
     public class SetAuthContextHandlerMiddleware
     {
+        protected DLBase _dLBase = new DLBase();
         private readonly RequestDelegate _next;
         public SetAuthContextHandlerMiddleware(RequestDelegate next)
         {
@@ -82,12 +87,28 @@ namespace DemoWebAPI.Core.Extensions
                 var jsonToken = handler.ReadJwtToken(token);
                 var payload = jsonToken.Payload;
 
-                //TODO
                 if(payload.ContainsKey("aid") && payload["aid"] != null)
                 {
-                    string aid = payload["aid"].ToString().StartsWith("Auth") ? payload["aid"].ToString().Replace("Auth", "") : payload["aid"].ToString();
-                    
-                    var accountId = Guid.Parse(aid);
+                    var generateKey = $"AccessToken_{payload["aid"]}";
+
+                    ConnectionMultiplexer connectionCacheRedis = null;
+                    try
+                    {
+                        connectionCacheRedis = await _dLBase.GetConnectionCacheRedis();
+
+                        IDatabase db = connectionCacheRedis.GetDatabase();
+                        var accessToken = db.StringGet(generateKey);
+
+                        return string.IsNullOrEmpty(accessToken.ToString());
+                    }
+                    catch (Exception)
+                    {
+                        throw new Exception();
+                    }
+                    finally
+                    {
+                        _dLBase.CloseConnectionCacheRedis(connectionCacheRedis);
+                    }
                 }
             }
 
