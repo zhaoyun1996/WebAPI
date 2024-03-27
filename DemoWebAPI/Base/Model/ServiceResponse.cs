@@ -3,7 +3,7 @@ using static DemoWebAPI.Constant.Enum;
 
 namespace DemoWebAPI.Base.Model
 {
-    public class ServiceRespone : IServiceReulst
+    public class ServiceResponse : IServiceReulst
     {
         /// <summary>
         /// Kết quả thực thi
@@ -53,14 +53,14 @@ namespace DemoWebAPI.Base.Model
 
         public double TotalTime { get; set; }
 
-        public ServiceRespone() { }
+        public ServiceResponse() { }
 
         /// <summary>
         /// Gán giá trị trả về cho trường hợp success
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public ServiceRespone OnSuccess(object data = null)
+        public ServiceResponse OnSuccess(object data = null)
         {
             Data = data;
 
@@ -72,7 +72,7 @@ namespace DemoWebAPI.Base.Model
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public ServiceRespone OnForbidden(object data = null)
+        public ServiceResponse OnForbidden(object data = null)
         {
             Code = ServiceResponseCode.Forbidden;
             Data = data;
@@ -85,7 +85,7 @@ namespace DemoWebAPI.Base.Model
         /// </summary>
         /// <param name="ex"></param>
         /// <returns></returns>
-        public ServiceRespone OnException(Exception ex)
+        public ServiceResponse OnException(Exception ex)
         {
             if(ex != null)
             {
@@ -106,7 +106,7 @@ namespace DemoWebAPI.Base.Model
         /// <param name="userMessage"></param>
         /// <param name="systemMessage"></param>
         /// <returns></returns>
-        public ServiceRespone OnError(ServiceResponseCode code, int subCode = 0, object data = null, string userMessage = "Error while process request.", string systemMessage = "")
+        public ServiceResponse OnError(ServiceResponseCode code, int subCode = 0, object data = null, string userMessage = "Error while process request.", string systemMessage = "")
         {
             Success = false;
             Code = code;

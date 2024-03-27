@@ -82,52 +82,16 @@ namespace DemoWebAPI.Core.Extensions
                 var jsonToken = handler.ReadJwtToken(token);
                 var payload = jsonToken.Payload;
 
-                var check = await RealCheckAuthentication(context, payload);
-                if(!check)
+                //TODO
+                if(payload.ContainsKey("aid") && payload["aid"] != null)
                 {
-                    return true;
+                    string aid = payload["aid"].ToString().StartsWith("Auth") ? payload["aid"].ToString().Replace("Auth", "") : payload["aid"].ToString();
+                    
+                    var accountId = Guid.Parse(aid);
                 }
             }
 
             httpContext.Items["Context"] = session;
-
-            return false;
-        }
-
-        private async Task<bool> RealCheckAuthentication(HttpContext context, JwtPayload payload)
-        {
-            if(SetAuthContextHandlerExtensions.UrlChecks != null)
-            {
-                var check = false;
-                if(SetAuthContextHandlerExtensions.UrlChecks.Contains("*"))
-                {
-                    check = true;
-                }
-                else
-                {
-                    var path = context.Request.Path.Value;
-                    foreach (var item in SetAuthContextHandlerExtensions.UrlChecks)
-                    {
-                        if(path.StartsWith(item, StringComparison.OrdinalIgnoreCase))
-                        {
-                            check = true;
-                            break;
-                        }
-                    }
-                }
-
-                if(check && payload.ContainsKey("aid") && payload["aid"] != null && !payload["aid"].ToString().StartsWith("AuthAsp"))
-                {
-                    var aid = payload["aid"].ToString();
-                    check = await SessionHelper.CheckLoginSession(aid);
-                    if(check == false)
-                    {
-                        context.Response.StatusCode = 401;
-                        await context.Response.WriteAsync($"Session {aid} was expried", Encoding.UTF8);
-                        return false;
-                    }
-                }
-            }
 
             return false;
         }

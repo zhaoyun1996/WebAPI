@@ -15,7 +15,7 @@ namespace DemoWebAPI.Controllers
         /// <param name="account"></param>
         /// <returns></returns>
         [HttpPost("CreateAccount")]
-        public async Task<ServiceRespone> CreateAccount(account account)
+        public async Task<ServiceResponse> CreateAccount(account account)
         {
             return await Insert(account);
         }
@@ -26,7 +26,7 @@ namespace DemoWebAPI.Controllers
         /// <param name="account"></param>
         /// <returns></returns>
         [HttpPut("EditAccount")]
-        public async Task<ServiceRespone> EditAccount(account account)
+        public async Task<ServiceResponse> EditAccount(account account)
         {
             return await Edit(account);
         }

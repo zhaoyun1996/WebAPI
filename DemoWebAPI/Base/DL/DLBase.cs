@@ -9,6 +9,7 @@ using System.ComponentModel.DataAnnotations;
 using static DemoWebAPI.Base.Model.ModelAttribute;
 using Dapper;
 using DemoWebAPI.Constant;
+using StackExchange.Redis;
 
 namespace DemoWebAPI.Base.DL
 {
@@ -904,6 +905,67 @@ namespace DemoWebAPI.Base.DL
             string database = configuration["ConnectionString:Database"] + "";
 
             return $"Host={host};Port={port};Username={username};Password={password};Database={database}";
+        }
+
+        /// <summary>
+        /// Lấy connection string của cache redis
+        /// </summary>
+        /// <returns></returns>
+        private string GetConnectionStringCacheRedis()
+        {
+            // Build configuration
+            IConfigurationRoot configuration = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .Build();
+
+            // Access values using the configuration
+            string host = configuration["ConnectionStringCacheRedis:Host"] + "";
+            string port = configuration["ConnectionStringCacheRedis:Port"] + "";
+            string user = configuration["ConnectionStringCacheRedis:User"] + "";
+            string password = configuration["ConnectionStringCacheRedis:Password"] + "";
+            string ssl = configuration["ConnectionStringCacheRedis:SSL"] + "";
+            string abortConnect = configuration["ConnectionStringCacheRedis:AbortConnect"] + "";
+
+            // Kết nối qua chuỗi kết nối
+            var connectionString = $"{host}:{port},ssl={ssl},password={password},user={user},abortConnect={abortConnect}";
+
+            // Kết nối qua cấu hình kết nối
+            //var options = new ConfigurationOptions();
+            //options.EndPoints.Add("singapore-redis.render.com", 6379);
+            //options.Password = "99nqd8Fev8hwOIb2TcGDnBHBI0fIZR5E";
+            //options.Ssl = true;
+            //options.User = "red-co1ea5mn7f5s73c6voj0";
+
+            //var connection = await ConnectionMultiplexer.ConnectAsync(options);
+
+            return connectionString;
+        }
+
+        /// <summary>
+        /// Lấy connection của cache redis
+        /// </summary>
+        /// <returns></returns>
+        public async Task<ConnectionMultiplexer> GetConnectionCacheRedis()
+        {
+            string connectionString = GetConnectionStringCacheRedis();
+            ConnectionMultiplexer connection = await ConnectionMultiplexer.ConnectAsync(connectionString);
+
+            return connection;
+        }
+
+        /// <summary>
+        /// Đóng connection string của cache redis
+        /// </summary>
+        /// <param name="connection"></param>
+        public void CloseConnectionCacheRedis(ConnectionMultiplexer connection)
+        {
+            if (connection != null)
+            {
+                connection.Close();
+            }
+
+            connection.Dispose();
         }
     }
 }

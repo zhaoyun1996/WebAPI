@@ -17,9 +17,9 @@ namespace DemoWebAPI.Base.BL
         /// <param name="customFilter"></param>
         /// <param name="columns"></param>
         /// <returns></returns>
-        public virtual async Task<ServiceRespone> GetAll(string filter, string sort, string customFilter, string columns)
+        public virtual async Task<ServiceResponse> GetAll(string filter, string sort, string customFilter, string columns)
         {
-            ServiceRespone res = new ServiceRespone();
+            ServiceResponse res = new ServiceResponse();
             res.Data = _dLBase.GetAll<TModel>(DatabaseType.Business, filter, sort, customFilter, columns);
             return res;
         }
@@ -30,9 +30,9 @@ namespace DemoWebAPI.Base.BL
         /// <param name="model"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public virtual async Task<ServiceRespone> Insert(TModel model)
+        public virtual async Task<ServiceResponse> Insert(TModel model)
         {
-            ServiceRespone res = new ServiceRespone();
+            ServiceResponse res = new ServiceResponse();
 
             IDbConnection cnn = null;
             IDbTransaction transaction = null;
@@ -100,9 +100,9 @@ namespace DemoWebAPI.Base.BL
         /// <param name="model"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public virtual async Task<ServiceRespone> Delete(TModel model)
+        public virtual async Task<ServiceResponse> Delete(TModel model)
         {
-            ServiceRespone res = new ServiceRespone();
+            ServiceResponse res = new ServiceResponse();
             try
             {
                 _dLBase.Delete(model);
@@ -121,9 +121,9 @@ namespace DemoWebAPI.Base.BL
         /// <param name="model"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public virtual async Task<ServiceRespone> Edit(TModel model)
+        public virtual async Task<ServiceResponse> Edit(TModel model)
         {
-            ServiceRespone res = new ServiceRespone();
+            ServiceResponse res = new ServiceResponse();
 
             IDbConnection cnn = null;
             IDbTransaction transaction = null;

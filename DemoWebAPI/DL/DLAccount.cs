@@ -12,28 +12,28 @@ namespace DemoWebAPI.DL
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        public async Task<ServiceRespone> Login(account model)
+        public async Task<ServiceResponse> Login(account model)
         {
-            ServiceRespone res = new ServiceRespone();
-            var sql = $"select count(*) from account where user_name = '{model.user_name}' limit 1";
-            List<int> userNameValids = QueryCommandTextOld<int>(DatabaseType.Business, DatabaseSide.ReadSide, sql);
-            if (userNameValids != null && userNameValids.Count > 0 && userNameValids[0] > 0)
-            {
-                sql = $"select * from account where user_name = '{model.user_name}' and password = '{model.password}' limit 1";
-                List<account> data = QueryCommandTextOld<account>(DatabaseType.Business, DatabaseSide.ReadSide, sql);
+            ServiceResponse res = new ServiceResponse();
 
-                if (userNameValids != null && userNameValids.Count > 0 && userNameValids[0] > 0)
+            var sql = $"select * from account where user_name = '{model.user_name}' limit 1";
+            List<account> accounts = QueryCommandTextOld<account>(DatabaseType.Business, DatabaseSide.ReadSide, sql);
+
+            if (accounts != null && accounts.Count > 0)
+            {
+                if (accounts[0].password == model.password)
                 {
+                    model.account_id = accounts[0].account_id;
                     res.OnSuccess(model);
                 }
                 else
                 {
-                    res.OnError(ServiceResponseCode.InvalidData, 0, model, null, "Password invalid");
+                    res.OnError(ServiceResponseCode.InvalidData, 0, null, null, "Mật khẩu không chính xác!");
                 }
             }
             else
             {
-                res.OnError(ServiceResponseCode.NotFound, 0, model, null, "Account not found");
+                res.OnError(ServiceResponseCode.NotFound, 0, null, null, "Tài khoản không tồn tại!");
             }
 
             return res;

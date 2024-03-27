@@ -3,7 +3,9 @@ using DemoWebAPI.BL;
 using DemoWebAPI.Core.Model;
 using DemoWebAPI.Model;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using StackExchange.Redis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -24,42 +26,14 @@ namespace DemoWebAPI.Base.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ServiceRespone> Login(account account)
+        public async Task<ServiceResponse> Login(account account)
         {
-            ServiceRespone respone = new ServiceRespone();
+            ServiceResponse respone = await _bLAccount.Login(account);
 
-            var res = await _bLAccount.Login(account);
-
-            var claimIdentity = new ClaimsIdentity();
-            claimIdentity.AddClaim(new Claim("una", account != null ? account.user_name : ""));
-
-            DateTime now = DateTimeUtility.GetNow();
-            var tokenExprired = now.AddSeconds(_config.AppSettings.AccessTokenExpiredTime);
-            var key = Encoding.ASCII.GetBytes(_config.AppSettings.JwtSecretKey);
-            var tokenDescriptor = new SecurityTokenDescriptor
+            if(respone.Success)
             {
-                Issuer = _config.AppSettings.JwtIssuer,
-                Subject = claimIdentity,
-                Expires = tokenExprired,
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            SecurityToken kTokent = tokenHandler.CreateToken(tokenDescriptor);
-            string token = tokenHandler.WriteToken(kTokent);
-
-            var result = new Dictionary<string, object>()
-            {
-                {
-                    "AccessToken", new
-                    {
-                        Token = token,
-                        TokenExprired = tokenExprired
-                    }
-                }
-            };
-
-            respone.OnSuccess(result);
+                respone = await _bLAccount.SetCacheRedis(respone, account, _config);
+            }
 
             return respone;
         }

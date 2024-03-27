@@ -14,7 +14,7 @@ namespace DemoWebAPI.Base.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public virtual async Task<ServiceRespone> Insert(TModel model)
+        public virtual async Task<ServiceResponse> Insert(TModel model)
         {
             return await _bLBase.Insert(model); 
         }
@@ -28,7 +28,7 @@ namespace DemoWebAPI.Base.Controllers
         /// <param name="columns"></param>
         /// <returns></returns>
         [HttpGet]
-        public virtual async Task<ServiceRespone> GetAll(string filter = "", string sort = "", string customFilter = "", string columns = "")
+        public virtual async Task<ServiceResponse> GetAll(string filter = "", string sort = "", string customFilter = "", string columns = "")
         {
             return await _bLBase.GetAll(filter, sort, customFilter, columns);
         }
@@ -39,7 +39,7 @@ namespace DemoWebAPI.Base.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpDelete]
-        public virtual async Task<ServiceRespone> Delete(TModel model)
+        public virtual async Task<ServiceResponse> Delete(TModel model)
         {
             return await _bLBase.Delete(model);
         }
@@ -50,7 +50,7 @@ namespace DemoWebAPI.Base.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPut]
-        public virtual async Task<ServiceRespone> Edit(TModel model)
+        public virtual async Task<ServiceResponse> Edit(TModel model)
         {
             return await _bLBase.Edit(model);
         }
