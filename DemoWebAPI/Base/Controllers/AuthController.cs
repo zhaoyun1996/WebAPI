@@ -37,5 +37,21 @@ namespace DemoWebAPI.Base.Controllers
 
             return respone;
         }
+
+        [HttpGet("get-access-token")]
+        public async Task<ServiceResponse> GetAccessToken(string aid)
+        {
+            ServiceResponse respone = await _bLAccount.GetAccessToken(aid);
+
+            return respone;
+        }
+
+        [HttpPost("logout")]
+        public async Task<ServiceResponse> Logout(string aid)
+        {
+            ServiceResponse respone = await _bLAccount.Logout(aid);
+
+            return respone;
+        }
     }
 }

@@ -10,6 +10,8 @@ using static DemoWebAPI.Base.Model.ModelAttribute;
 using Dapper;
 using DemoWebAPI.Constant;
 using StackExchange.Redis;
+using System.ComponentModel.DataAnnotations.Schema;
+using Azure.Identity;
 
 namespace DemoWebAPI.Base.DL
 {
@@ -966,6 +968,41 @@ namespace DemoWebAPI.Base.DL
             }
 
             connection.Dispose();
+        }
+
+        public List<TModel> GetByField<TModel>(IDbConnection cnn, string fieldName, string value) where TModel : BaseModel
+        {
+            ScriptHelperOutput sql = GenerateSelectByField<TModel>(fieldName, value);
+
+            var data = Query<TModel>(CommandType.Text, null, null, sql.Script, sql.Param);
+
+            return data;
+        }
+
+        private ScriptHelperOutput GenerateSelectByField<T>(string fieldName, string value)
+        {
+            ScriptHelperOutput sql = new ScriptHelperOutput();
+            value = SecureUtil.SafeSqlLiteral(value);
+            ScriptHelperOutput sqlWhere = GetWhereValue($"{fieldName}", EnumDataType.None, value);
+            var model = Activator.CreateInstance<T>();
+            var tableAtrr = model?.GetType().GetCustomAttribute<TableAttribute>();
+            string tableName = tableAtrr.Name;
+            if (sqlWhere != null)
+            {
+                sql.AppendScript($"SELECT {tableName}.*, {GetEditVersionColumn(tableName)} FROM {tableName} WHERE {fieldName} = {sqlWhere.Script}");
+                sql.AppendParam(sqlWhere.Param);
+            }
+
+            return sql;
+        }
+
+        private ScriptHelperOutput GetWhereValue(string paramName, EnumDataType dataType, object value)
+        {
+            ScriptHelperOutput result = new ScriptHelperOutput();
+            result.AppendScript($":{paramName}");
+            object valueData = Converter.ConvertObjectToType(dataType, value);
+            result.AppendParam(paramName, valueData);
+            return result;
         }
     }
 }

@@ -5,6 +5,7 @@ using DemoWebAPI.DL;
 using DemoWebAPI.Model;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using StackExchange.Redis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -103,6 +104,59 @@ namespace DemoWebAPI.BL
                 {
                     _dLBase.CloseConnectionCacheRedis(connectionCacheRedis);
                 }
+            }
+
+            return response;
+        }
+
+        public virtual async Task<ServiceResponse> GetAccessToken(string aid)
+        {
+            ServiceResponse response = new ServiceResponse();
+
+            // Lưu thông tin đăng nhập vào cache
+            ConnectionMultiplexer connectionCacheRedis = null;
+
+            try
+            {
+                connectionCacheRedis = await _dLBase.GetConnectionCacheRedis();
+
+                IDatabase db = connectionCacheRedis.GetDatabase();
+                var accessToken = db.StringGet($"{AccessToken}_{aid}");
+
+                response.OnSuccess(accessToken.ToString());
+            }
+            catch (Exception)
+            {
+                throw new Exception();
+            }
+            finally
+            {
+                _dLBase.CloseConnectionCacheRedis(connectionCacheRedis);
+            }
+
+            return response;
+        }
+
+        public virtual async Task<ServiceResponse> Logout(string aid)
+        {
+            ServiceResponse response = new ServiceResponse();
+
+            // Lưu thông tin đăng nhập vào cache
+            ConnectionMultiplexer connectionCacheRedis = null;
+
+            try
+            {
+                connectionCacheRedis = await _dLBase.GetConnectionCacheRedis();
+                IDatabase db = connectionCacheRedis.GetDatabase();
+                db.KeyDelete($"{AccessToken}_{aid}");
+            }
+            catch (Exception)
+            {
+                throw new Exception();
+            }
+            finally
+            {
+                _dLBase.CloseConnectionCacheRedis(connectionCacheRedis);
             }
 
             return response;

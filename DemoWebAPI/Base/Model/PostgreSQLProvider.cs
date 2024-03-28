@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using DemoWebAPI.Base.Interface;
+using Npgsql;
 using System.Data;
 
 namespace DemoWebAPI.Base.Model
@@ -49,6 +50,11 @@ namespace DemoWebAPI.Base.Model
         public IEnumerable<T> Query<T>(IDbConnection cnn, CommandDefinition command)
         {
             return cnn.Query<T>(command);
+        }
+
+        public IDbConnection GetConnection(string cnnString)
+        {
+            return new NpgsqlConnection(cnnString);
         }
     }
 }

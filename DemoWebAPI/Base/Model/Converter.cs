@@ -1,7 +1,9 @@
 ﻿using Newtonsoft.Json;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using static DemoWebAPI.Constant.Enum;
 
 namespace DemoWebAPI.Base.Model
 {
@@ -80,6 +82,32 @@ namespace DemoWebAPI.Base.Model
                 settings = GetJsonSerializerSettings();
             }
             return JsonConvert.SerializeObject(obj, settings);
+        }
+
+        public static object ConvertObjectToType(EnumDataType dataType, object value)
+        {
+            object valueData = value;
+            Type type = value.GetType();
+
+            if(value is string && dataType != EnumDataType.String)
+            {
+                if(dataType == EnumDataType.None)
+                {
+                    Guid guidValue = Guid.Empty;
+                    Decimal longValue = 0;
+
+                    if(Guid.TryParse((string)value, out guidValue))
+                    {
+                        dataType = EnumDataType.Guid;
+                    }
+                    else if(Decimal.TryParse((string)value, out longValue))
+                    {
+                        dataType = EnumDataType.Decimal;
+                    }
+                }
+                valueData = Converter.ConvertObjectToType(dataType, valueData);
+            }
+            return valueData;
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using DemoWebAPI.Base.DL;
 using DemoWebAPI.Base.Model;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
+using System.Reflection;
 using static DemoWebAPI.Constant.Enum;
 
 namespace DemoWebAPI.Base.BL
